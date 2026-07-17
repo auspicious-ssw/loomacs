@@ -100,17 +100,66 @@
   :ensure nil
   :demand t)
 
-;; Dashboard 的条目由 widget 负责交互。插件默认使用整块 box cursor，并在
-;; 鼠标停留时持续高亮条目；两者会和 r/p/m 的键盘焦点形成两个视觉目标。
+;; Dashboard 的条目由 widget 负责交互。键盘焦点使用独立 overlay 覆盖当前
+;; widget 范围，避免 box/bar cursor 只压在图标边缘而无法表达“选中整项”。
+(defface ssw/dashboard-selection-face
+  '((((class color) (background dark))
+     (:background "#cba6f7" :foreground "#1e1e2e" :weight bold))
+    (((class color) (background light))
+     (:background "#8839ef" :foreground "#eff1f5" :weight bold))
+    (t (:inverse-video t :weight bold)))
+  "Dashboard 当前键盘选中项使用的 face。")
+
+(defvar-local ssw/dashboard-selection-overlay nil
+  "当前 Dashboard buffer 中唯一的键盘选择 overlay。")
+
+(defun ssw/dashboard-button-overlay-at-point ()
+  "返回当前 point 所在的 Dashboard widget overlay。"
+  (catch 'button-overlay
+    (dolist (overlay (overlays-at (point)))
+      (when (overlay-get overlay 'button)
+        (throw 'button-overlay overlay)))))
+
+(defun ssw/dashboard-update-selection ()
+  "让 Dashboard 选择 overlay 跟随当前 widget。"
+  (when (and (derived-mode-p 'dashboard-mode)
+             (overlayp ssw/dashboard-selection-overlay)
+             (overlay-buffer ssw/dashboard-selection-overlay))
+    (if-let ((button-overlay (ssw/dashboard-button-overlay-at-point)))
+        (move-overlay ssw/dashboard-selection-overlay
+                      (overlay-start button-overlay)
+                      (overlay-end button-overlay)
+                      (current-buffer))
+      (move-overlay ssw/dashboard-selection-overlay
+                    (point-min) (point-min) (current-buffer)))))
+
 (defun ssw/dashboard-apply-interaction-style ()
-  "为当前 Dashboard buffer 应用清晰但不过度抢眼的交互样式。"
-  ;; r/p/m、TAB 和方向键都通过移动 point 表达焦点，因此不能完全隐藏光标。
-  (setq-local cursor-type '(bar . 2))
+  "为当前 Dashboard buffer 建立唯一、整项可见的键盘焦点。"
+  ;; Dashboard 刷新时会重新生成 widget；先删除旧选择 overlay，保证每个
+  ;; buffer 永远只有一个选择状态，不残留已经失效的范围。
+  (dolist (overlay (overlays-in (point-min) (point-max)))
+    (when (overlay-get overlay 'ssw/dashboard-selection)
+      (delete-overlay overlay)))
+
+  ;; r/p/m、TAB 和方向键移动 point 后由整项高亮表达焦点，因此隐藏原生光标。
+  (setq-local cursor-type nil
+              ssw/dashboard-selection-overlay
+              (make-overlay (point-min) (point-min) (current-buffer)))
+  (overlay-put ssw/dashboard-selection-overlay
+               'ssw/dashboard-selection t)
+  (overlay-put ssw/dashboard-selection-overlay
+               'face 'ssw/dashboard-selection-face)
+  (overlay-put ssw/dashboard-selection-overlay 'priority 100)
+
   ;; Dashboard 在进入 major mode 前已经生成 widget overlay。取消 mouse-face
   ;; 只会移除持续高亮；插件的手型 pointer、点击 action 和 keymap 保持不变。
   (dolist (overlay (overlays-in (point-min) (point-max)))
     (when (overlay-get overlay 'button)
-      (overlay-put overlay 'mouse-face nil))))
+      (overlay-put overlay 'mouse-face nil)))
+
+  ;; post-command-hook 是 buffer-local；离开 Dashboard 后不会影响普通编辑。
+  (add-hook 'post-command-hook #'ssw/dashboard-update-selection nil t)
+  (ssw/dashboard-update-selection))
 
 ;; Dashboard 使用成熟插件提供的标准组件与 hook；这里只选择内置 project.el
 ;; 后端、公开图标变量和展示内容，不维护自定义首页渲染逻辑。

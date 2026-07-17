@@ -13,7 +13,7 @@
 7. 默认字体为 17pt Fira Code，中文使用 PingFang SC 回退。
 8. 无论主配置是否成功，启动阶段临时提高的 GC 参数都应恢复。
 9. 配置源码目录不继续产生 history、recentf、places 或 autosave 状态。
-10. Dashboard 使用细竖线显示唯一键盘焦点；鼠标停留不产生第二个持续高亮。
+10. Dashboard 使用紫色整项高亮显示唯一键盘焦点；鼠标停留不产生第二个持续高亮。
 
 ## 包安装与代理
 
@@ -69,9 +69,9 @@ brew install --cask font-symbols-only-nerd-font
 
 ### Dashboard 按 `r`、`p` 或 `m` 看起来没有反应
 
-这三个按键是在对应区域内循环移动焦点，不会立即打开条目：`r` 对应 Recent Files，`p` 对应 Projects，`m` 对应 Bookmarks；大写 `R`、`P`、`M` 反向移动。细竖线表示当前焦点，按 `RET` 才会打开条目。
+这三个按键是在对应区域内循环移动焦点，不会立即打开条目：`r` 对应 Recent Files，`p` 对应 Projects，`m` 对应 Bookmarks；大写 `R`、`P`、`M` 反向移动。紫色整项高亮表示当前焦点，按 `RET` 才会打开条目。
 
-如果细竖线没有移动，先确认当前 buffer 名称是 `*dashboard*`，再按 `g` 刷新。仍异常时执行 `M-x dashboard-open` 重新生成 Dashboard，并运行 `./scripts/check.sh` 验证动态快捷键。
+如果整项高亮没有移动，先确认当前 buffer 名称是 `*dashboard*`，再按 `g` 刷新。仍异常时执行 `M-x dashboard-open` 重新生成 Dashboard，并运行 `./scripts/check.sh` 验证动态快捷键与选择 overlay。
 
 ### 临时取消最大化
 
