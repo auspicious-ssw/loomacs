@@ -39,7 +39,9 @@
         custom-file (expand-file-name "custom.el" ssw/state-directory)
         savehist-file (expand-file-name "history" ssw/state-directory)
         save-place-file (expand-file-name "places" ssw/state-directory)
-        recentf-save-file (expand-file-name "recentf" ssw/state-directory)))
+        recentf-save-file (expand-file-name "recentf" ssw/state-directory)
+        project-list-file (expand-file-name "projects" ssw/state-directory)
+        bookmark-default-file (expand-file-name "bookmarks" ssw/state-directory)))
 
 ;; Customize 是本机持久设置。加载失败时只跳过该文件，不能阻断主配置启动。
 (when (file-exists-p custom-file)

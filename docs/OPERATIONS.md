@@ -62,7 +62,9 @@ brew install --cask font-symbols-only-nerd-font
 
 ### Dashboard 显示 `No items`
 
-这不是下载失败。Dashboard 的三个区域分别读取 Emacs 最近文件、`project.el` 已知项目和书签；初次使用时三者都可能为空。插件安装在 `~/.config/emacs/elpa/`，不会出现在 `~/Downloads`。打开并保存文件后会逐步形成 Recent Files；访问 Git 项目后可由 `project.el` 记录项目；书签需要用户显式创建。
+这不是下载失败。Dashboard 的三个区域分别读取 Emacs 最近文件、`project.el` 已知项目和书签；初次使用时三者都可能为空。插件安装在 `~/.config/emacs/elpa/`，不会出现在 `~/Downloads`。
+
+当前机器首次初始化使用真实本机数据：Emacs 配置及常用文档进入 Recent Files，现有 Git 项目进入 Projects，并为对应入口创建 Bookmarks。这些内容保存在 XDG state，不提交到 Git，也不会在其他机器上伪造相同路径。后续打开文件、访问项目或创建书签时，Dashboard 会继续自动更新。
 
 ### 临时取消最大化
 

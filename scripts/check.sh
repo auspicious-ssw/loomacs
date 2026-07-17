@@ -20,7 +20,7 @@ EMPTY_PACKAGE_DIR="$WORK_DIR/empty-elpa"
 mkdir -p "$STATE_HOME" "$CACHE_HOME" "$EMPTY_PACKAGE_DIR"
 
 legacy_fingerprint() {
-  for name in history recentf places; do
+  for name in history recentf places projects bookmarks; do
     if [ -f "$ROOT/$name" ]; then
       cksum "$ROOT/$name"
     fi
@@ -76,11 +76,16 @@ XDG_CACHE_HOME="$CACHE_HOME/installed" \
                          (eq (alist-get (quote fullscreen) default-frame-alist)
                              (quote maximized)))
               (error "初始或后续 frame 未配置为最大化"))
-            (unless (string-prefix-p
-                     (file-name-as-directory
-                      (expand-file-name "emacs" (getenv "XDG_STATE_HOME")))
-                     savehist-file)
-              (error "savehist 未写入 XDG state"))
+            (let ((state-directory
+                   (file-name-as-directory
+                    (expand-file-name "emacs" (getenv "XDG_STATE_HOME")))))
+              (dolist (state-file (list savehist-file
+                                        save-place-file
+                                        recentf-save-file
+                                        project-list-file
+                                        bookmark-default-file))
+                (unless (string-prefix-p state-directory state-file)
+                  (error "状态文件未写入 XDG state：%s" state-file))))
             (when (package-installed-p (quote dashboard))
               (unless (featurep (quote dashboard))
                 (error "Dashboard 已安装但未加载"))
@@ -153,7 +158,7 @@ if git -C "$ROOT" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
 
   git -C "$ROOT" ls-files | while IFS= read -r path; do
     case "$path" in
-      elpa/*|auto-save-list/*|eln-cache/*|history|recentf|places|custom.el|\
+      elpa/*|auto-save-list/*|eln-cache/*|history|recentf|places|projects|bookmarks|custom.el|\
       .authinfo|.authinfo.gpg|.env|.env.*|*.pem|*.key|*.p12|*.pfx)
         echo "ERROR: 不应跟踪的文件：$path" >&2
         exit 1

@@ -20,7 +20,9 @@ ${XDG_STATE_HOME:-~/.local/state}/emacs/
 ├── custom.el                  # Customize 持久设置
 ├── history                    # 命令和 minibuffer 历史
 ├── places                     # 文件光标位置
-└── recentf                    # 最近文件列表
+├── recentf                    # 最近文件列表
+├── projects                   # project.el 已知项目
+└── bookmarks                  # Emacs 书签
 
 ${XDG_CACHE_HOME:-~/.cache}/emacs/
 ├── backups/                   # 备份文件

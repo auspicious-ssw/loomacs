@@ -49,7 +49,7 @@ Dashboard 的 Recent Files、Projects 和 Bookmarks 是 Emacs 使用状态，不
 
 - Git 管理：配置、文档、验证脚本。
 - 本机依赖：`elpa/`，可通过包清单重新安装。
-- 持久运行状态：`${XDG_STATE_HOME:-~/.local/state}/emacs/`。
+- 持久运行状态：`${XDG_STATE_HOME:-~/.local/state}/emacs/`，包括最近文件、项目和书签。
 - 可清理缓存：`${XDG_CACHE_HOME:-~/.cache}/emacs/`。
 - 密钥与令牌：不得写入本仓库；未来 GPT 接入使用系统密钥链或 `auth-source`。
 

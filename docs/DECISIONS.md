@@ -58,7 +58,7 @@
 
 运行状态与可清理缓存使用不同的 XDG 边界：
 
-- history、recentf、places 和 Customize 写入 `${XDG_STATE_HOME:-~/.local/state}/emacs/`。
+- history、recentf、places、project.el 项目、书签和 Customize 写入 `${XDG_STATE_HOME:-~/.local/state}/emacs/`。
 - backup、autosave 和 auto-save-list 写入 `${XDG_CACHE_HOME:-~/.cache}/emacs/`。
 - 第三方包 `elpa/` 继续保留在配置目录，但由 `.gitignore` 排除，并通过包清单重建。
 
