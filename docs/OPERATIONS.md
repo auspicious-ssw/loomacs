@@ -13,6 +13,7 @@
 7. 默认字体为 17pt Fira Code，中文使用 PingFang SC 回退。
 8. 无论主配置是否成功，启动阶段临时提高的 GC 参数都应恢复。
 9. 配置源码目录不继续产生 history、recentf、places 或 autosave 状态。
+10. Dashboard 使用细竖线显示唯一键盘焦点；鼠标停留不产生第二个持续高亮。
 
 ## 包安装与代理
 
@@ -65,6 +66,12 @@ brew install --cask font-symbols-only-nerd-font
 这不是下载失败。Dashboard 的三个区域分别读取 Emacs 最近文件、`project.el` 已知项目和书签；初次使用时三者都可能为空。插件安装在 `~/.config/emacs/elpa/`，不会出现在 `~/Downloads`。
 
 当前机器首次初始化使用真实本机数据：Emacs 配置及常用文档进入 Recent Files，现有 Git 项目进入 Projects，并为对应入口创建 Bookmarks。这些内容保存在 XDG state，不提交到 Git，也不会在其他机器上伪造相同路径。后续打开文件、访问项目或创建书签时，Dashboard 会继续自动更新。
+
+### Dashboard 按 `r`、`p` 或 `m` 看起来没有反应
+
+这三个按键是在对应区域内循环移动焦点，不会立即打开条目：`r` 对应 Recent Files，`p` 对应 Projects，`m` 对应 Bookmarks；大写 `R`、`P`、`M` 反向移动。细竖线表示当前焦点，按 `RET` 才会打开条目。
+
+如果细竖线没有移动，先确认当前 buffer 名称是 `*dashboard*`，再按 `g` 刷新。仍异常时执行 `M-x dashboard-open` 重新生成 Dashboard，并运行 `./scripts/check.sh` 验证动态快捷键。
 
 ### 临时取消最大化
 

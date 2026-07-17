@@ -100,11 +100,25 @@
   :ensure nil
   :demand t)
 
+;; Dashboard 的条目由 widget 负责交互。插件默认使用整块 box cursor，并在
+;; 鼠标停留时持续高亮条目；两者会和 r/p/m 的键盘焦点形成两个视觉目标。
+(defun ssw/dashboard-apply-interaction-style ()
+  "为当前 Dashboard buffer 应用清晰但不过度抢眼的交互样式。"
+  ;; r/p/m、TAB 和方向键都通过移动 point 表达焦点，因此不能完全隐藏光标。
+  (setq-local cursor-type '(bar . 2))
+  ;; Dashboard 在进入 major mode 前已经生成 widget overlay。取消 mouse-face
+  ;; 只会移除持续高亮；插件的手型 pointer、点击 action 和 keymap 保持不变。
+  (dolist (overlay (overlays-in (point-min) (point-max)))
+    (when (overlay-get overlay 'button)
+      (overlay-put overlay 'mouse-face nil))))
+
 ;; Dashboard 使用成熟插件提供的标准组件与 hook；这里只选择内置 project.el
 ;; 后端、公开图标变量和展示内容，不维护自定义首页渲染逻辑。
 (use-package dashboard
   :if (package-installed-p 'dashboard)
   :ensure nil
+  :demand t
+  :hook (dashboard-mode . ssw/dashboard-apply-interaction-style)
   :init
   (setq dashboard-startup-banner 'logo
         dashboard-banner-logo-title "Welcome back, SSW"
