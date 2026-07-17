@@ -17,7 +17,8 @@
   - `init.el`：基础体验、字体、主题、macOS 按键、缓存目录和历史记录。
 - 当前主题：`batppuccin-mocha`。
 - 当前首页：Dashboard + Nerd Icons，显示带图标的最近文件、`project.el` 项目和书签。
-- 当前字体策略：英文/代码优先 `Fira Code`，中文回退 `PingFang SC`。
+- 当前字体策略：英文/代码使用 17pt `Fira Code`，中文回退 `PingFang SC`。
+- 当前窗口策略：GUI 启动和 daemon 新建 frame 默认使用 macOS 最大化普通窗口，保留菜单栏和 Dock。
 - 当前包管理：使用 Emacs 内置 `package.el` 和 `use-package`，包源包含 GNU ELPA、NonGNU ELPA 和 MELPA。
 - 新运行状态写入 `${XDG_STATE_HOME:-~/.local/state}/emacs/`，缓存写入 `${XDG_CACHE_HOME:-~/.cache}/emacs/`。
 - 配置启动不自动联网；Batppuccin 缺失时回退到内置 `modus-vivendi-tinted`。

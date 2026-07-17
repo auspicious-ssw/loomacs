@@ -18,6 +18,13 @@
       package-enable-at-startup nil)
 (add-hook 'emacs-startup-hook #'ssw/restore-gc-settings)
 
+;; 用户习惯将主工作窗口铺满 macOS 可用工作区；使用 maximized 而不是固定像素，
+;; 能自动适配菜单栏、Dock、显示器分辨率以及 daemon/client 创建的新 frame。
+(setq frame-resize-pixelwise t
+      window-resize-pixelwise t)
+(add-to-list 'initial-frame-alist '(fullscreen . maximized))
+(add-to-list 'default-frame-alist '(fullscreen . maximized))
+
 ;; 在窗口创建前关闭不需要的界面元素，避免启动时闪烁。
 (menu-bar-mode -1)
 (tool-bar-mode -1)

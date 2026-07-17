@@ -69,6 +69,13 @@ XDG_CACHE_HOME="$CACHE_HOME/installed" \
               (error "GC 阈值未恢复"))
             (unless (= gc-cons-percentage 0.1)
               (error "GC 比例未恢复"))
+            (unless (= ssw/default-font-height 170)
+              (error "默认字体不是 17pt"))
+            (unless (and (eq (alist-get (quote fullscreen) initial-frame-alist)
+                             (quote maximized))
+                         (eq (alist-get (quote fullscreen) default-frame-alist)
+                             (quote maximized)))
+              (error "初始或后续 frame 未配置为最大化"))
             (unless (string-prefix-p
                      (file-name-as-directory
                       (expand-file-name "emacs" (getenv "XDG_STATE_HOME")))

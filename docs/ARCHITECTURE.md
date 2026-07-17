@@ -36,6 +36,7 @@ Emacs 启动
 │   ├── 临时提高 GC 阈值
 │   ├── 注册 GC 恢复兜底
 │   ├── 禁用 package-enable-at-startup
+│   ├── 初始 frame 与后续 frame 默认最大化
 │   └── 关闭 menu/tool/scroll bar，减少启动闪烁
 └── init.el
     ├── 基础编辑体验
@@ -43,7 +44,7 @@ Emacs 启动
     ├── 已安装时加载 batppuccin-mocha
     ├── 包缺失或加载失败时使用内置主题
     ├── 已安装时启用 Dashboard + Nerd Icons 启动首页
-    ├── 字体与中文回退
+    ├── 17pt Fira Code 与中文回退
     ├── macOS 修饰键
     ├── XDG state/cache 目录边界
     ├── use-package

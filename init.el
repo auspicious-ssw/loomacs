@@ -124,11 +124,17 @@
 
 ;; Fira Code 用于英文和代码，中文回退到 macOS 自带苹方，
 ;; 避免缺字或字形混杂。
+(defconst ssw/default-font-height 170
+  "默认字体高度；Emacs 以 1/10pt 表示，因此 170 等于 17pt。")
+
 (defun ssw/apply-fonts (&optional frame)
   "为 FRAME 应用代码字体和中文回退字体。"
   (with-selected-frame (or frame (selected-frame))
     (when (find-font (font-spec :family "Fira Code"))
-      (set-face-attribute 'default nil :family "Fira Code" :height 150 :weight 'regular))
+      (set-face-attribute 'default nil
+                          :family "Fira Code"
+                          :height ssw/default-font-height
+                          :weight 'regular))
     (when (find-font (font-spec :family "PingFang SC"))
       (set-fontset-font t 'han (font-spec :family "PingFang SC") nil 'prepend))))
 

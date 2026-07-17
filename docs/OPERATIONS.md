@@ -8,9 +8,11 @@
 2. Batppuccin 已安装时加载 `batppuccin-mocha`。
 3. Batppuccin 缺失或加载失败时回退到内置 `modus-vivendi-tinted`。
 4. Dashboard 已安装时显示启动首页；缺失时不影响启动。
-5. Nerd Icons 与 Symbols Nerd Font 可用时显示图标；缺失时退化为文字列表。
-6. 无论主配置是否成功，启动阶段临时提高的 GC 参数都应恢复。
-7. 配置源码目录不继续产生 history、recentf、places 或 autosave 状态。
+5. Nerd Icons 与 Symbols Nerd Font 可用时显示图标；插件缺失时退化为文字列表，字体缺失时由检查阻止交付。
+6. GUI frame 默认最大化到当前显示器可用工作区，保留菜单栏和 Dock。
+7. 默认字体为 17pt Fira Code，中文使用 PingFang SC 回退。
+8. 无论主配置是否成功，启动阶段临时提高的 GC 参数都应恢复。
+9. 配置源码目录不继续产生 history、recentf、places 或 autosave 状态。
 
 ## 包安装与代理
 
@@ -57,6 +59,14 @@ brew install --cask font-symbols-only-nerd-font
 ### Dashboard 未显示
 
 先执行 `M-x package-install-selected-packages`，确认 `dashboard` 已安装，再重启 Emacs。若使用 daemon，新的 `emacsclient -c` frame 会通过 `initial-buffer-choice` 打开 Dashboard；已有 frame 可执行 `M-x dashboard-open`。
+
+### Dashboard 显示 `No items`
+
+这不是下载失败。Dashboard 的三个区域分别读取 Emacs 最近文件、`project.el` 已知项目和书签；初次使用时三者都可能为空。插件安装在 `~/.config/emacs/elpa/`，不会出现在 `~/Downloads`。打开并保存文件后会逐步形成 Recent Files；访问 Git 项目后可由 `project.el` 记录项目；书签需要用户显式创建。
+
+### 临时取消最大化
+
+执行 `M-x toggle-frame-maximized`，或使用 macOS 窗口标题栏。下次新建 GUI frame 仍按默认策略最大化。
 
 ### Dashboard 图标显示为方框
 

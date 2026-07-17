@@ -47,7 +47,7 @@
 
 当前策略：
 
-- 英文和代码优先使用 `Fira Code`。
+- 英文和代码使用 17pt `Fira Code`。
 - 中文回退使用 `PingFang SC`。
 
 原因：代码字体和中文字体混排时，如果不显式设置中文回退，容易出现缺字、字宽不一致或显示风格混乱。
@@ -123,3 +123,11 @@
 不引入 Projectile、Doom Emacs、无正式 Release 的 Doom Dashboard 扩展或自定义首页渲染逻辑。视觉效果只通过 Dashboard 与 Nerd Icons 的公开配置变量实现，保持升级边界清晰。
 
 Dashboard 仍遵循离线启动约束：Dashboard 缺失时 Emacs 回到普通初始 buffer；Nerd Icons 包缺失时 Dashboard 退化为文字列表；字体缺失时图标可能显示为方框，并由本地检查与 GUI 验收发现。任何缺失都不会在启动时联网安装，用户稍后显式执行维护命令。
+
+## D014：GUI 默认使用最大化普通窗口
+
+状态：已实现。
+
+初始 GUI frame 与 daemon/client 新建 frame 默认使用 `fullscreen=maximized`。这里的“最大化”是占满当前显示器可用工作区的普通窗口，不是隐藏菜单栏和 Dock 的 macOS 原生全屏。
+
+原因：用户日常将主工作窗口铺满可用工作区；相比写死像素坐标，最大化参数能自动适配显示器分辨率、菜单栏、Dock 和未来的多显示器变化。需要临时缩小时仍可使用 macOS 窗口按钮或 `M-x toggle-frame-maximized`。

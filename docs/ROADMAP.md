@@ -47,12 +47,12 @@
 2. 确认 Option/Command 修饰键策略。
 3. 将主题切换为 `batppuccin-mocha`。
 4. 使用 Dashboard + Nerd Icons 建立带图标的最近文件、项目和书签入口。
+5. 默认使用最大化普通窗口，并将 Fira Code 调整为 17pt。
 
 后续任务：
 
 1. 确认剪贴板和中文输入体验。
-2. 配置窗口默认大小和位置。
-3. 决定是否使用 daemon + emacsclient。
+2. 决定是否使用 daemon + emacsclient。
 
 验收标准：
 

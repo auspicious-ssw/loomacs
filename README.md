@@ -9,7 +9,8 @@
 - 包管理：Emacs 内置 `package.el` 与 `use-package`。
 - 主题：已安装 Batppuccin 时使用 `batppuccin-mocha`；缺失时离线回退到内置 `modus-vivendi-tinted`。
 - 首页：Dashboard + Nerd Icons，显示带图标的最近文件、内置 `project.el` 项目和书签；插件缺失时安全降级。
-- 字体：英文和代码使用 Fira Code，中文回退到 PingFang SC；字体缺失不会阻止启动。
+- 字体：英文和代码使用 17pt Fira Code，中文回退到 PingFang SC；字体缺失不会阻止启动。
+- 窗口：GUI 默认使用最大化普通窗口，占满可用工作区但保留菜单栏和 Dock。
 - 启动过程不自动刷新包索引或安装第三方包。
 
 ## 安装
@@ -33,6 +34,8 @@ brew install --cask font-symbols-only-nerd-font
 ```
 
 包索引刷新会分别访问 GNU ELPA、NonGNU ELPA 和 MELPA，因此代理软件可能显示多条连接。这是三个明确的软件源请求，不是循环重连。
+
+Dashboard 的 Recent Files、Projects 和 Bookmarks 是 Emacs 使用状态，不是下载列表；插件安装在 `~/.config/emacs/elpa/`，不会出现在 `~/Downloads`。
 
 ## 验证
 
