@@ -14,6 +14,7 @@
 8. 无论主配置是否成功，启动阶段临时提高的 GC 参数都应恢复。
 9. 配置源码目录不继续产生 history、recentf、places 或 autosave 状态。
 10. Dashboard 使用紫色整项高亮显示唯一键盘焦点；鼠标停留不产生第二个持续高亮。
+11. Doom Modeline 已安装时显示场景化信息底栏；缺失时安全保留 Emacs 默认 mode-line。
 
 ## 包安装与代理
 
@@ -80,6 +81,12 @@ brew install --cask font-symbols-only-nerd-font
 ### Dashboard 图标显示为方框
 
 确认 `nerd-icons` 已安装，并执行 `brew list --cask font-symbols-only-nerd-font` 检查字体。字体刚安装时需要完全退出并重启 Emacs，让 macOS 图形进程重新读取字体列表。图标失败只影响视觉，不应阻断 Dashboard 或普通编辑。
+
+### 底栏仍是 Emacs 默认样式
+
+执行 `M-x package-install-selected-packages`，确认 `doom-modeline` 及其依赖已安装，再完全重启 Emacs。`M-x doom-modeline-mode` 可以临时切换状态；正常配置下该全局 minor mode 应为启用状态。
+
+底栏刻意不常驻显示编码、时间、电池和次要模式。如果 Git、诊断或 LSP 信息未出现，先确认当前文件确实处于对应项目或功能状态；不要把“当前无状态”误判为插件失效。
 
 ### 配置加载错误
 

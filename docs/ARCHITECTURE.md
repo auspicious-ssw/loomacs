@@ -45,6 +45,7 @@ Emacs 启动
     ├── package.el 包源和包初始化
     ├── 已安装时加载 batppuccin-mocha
     ├── 包缺失或加载失败时使用内置主题
+    ├── 已安装时启用 Doom Modeline 信息底栏
     ├── 已安装时启用 Dashboard + Nerd Icons 启动首页
     ├── 17pt Fira Code 与中文回退
     ├── macOS 修饰键

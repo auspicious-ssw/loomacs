@@ -86,6 +86,25 @@ XDG_CACHE_HOME="$CACHE_HOME/installed" \
                                         bookmark-default-file))
                 (unless (string-prefix-p state-directory state-file)
                   (error "状态文件未写入 XDG state：%s" state-file))))
+            (when (package-installed-p (quote doom-modeline))
+              (unless (and (featurep (quote doom-modeline))
+                           (bound-and-true-p doom-modeline-mode))
+                (error "Doom Modeline 已安装但未启用"))
+              (unless (and (= doom-modeline-height 32)
+                           (= doom-modeline-window-width-limit 80)
+                           (eq doom-modeline-buffer-file-name-style
+                               (quote relative-to-project))
+                           doom-modeline-icon
+                           doom-modeline-project-name
+                           doom-modeline-remote-host
+                           doom-modeline-lsp
+                           (eq doom-modeline-check (quote auto))
+                           (null doom-modeline-buffer-encoding)
+                           (null doom-modeline-minor-modes)
+                           (null doom-modeline-github)
+                           (null doom-modeline-battery)
+                           (null doom-modeline-time))
+                (error "Doom Modeline 信息密度配置不符合约定")))
             (when (package-installed-p (quote dashboard))
               (unless (featurep (quote dashboard))
                 (error "Dashboard 已安装但未加载"))
@@ -110,6 +129,11 @@ XDG_CACHE_HOME="$CACHE_HOME/installed" \
                 (unless (null (buffer-local-value (quote cursor-type) buffer))
                   (error "Dashboard 原生光标未隐藏"))
                 (with-current-buffer buffer
+                  (when (package-installed-p (quote doom-modeline))
+                    (unless (string-match-p
+                             "doom-modeline-format--dashboard"
+                             (prin1-to-string mode-line-format))
+                      (error "Dashboard 未使用 Doom Modeline 专用布局")))
                   (let ((button-count 0)
                         (selection-count 0))
                     (dolist (overlay (overlays-in (point-min) (point-max)))
@@ -176,10 +200,11 @@ XDG_CACHE_HOME="$CACHE_HOME/installed" \
                            dashboard-set-file-icons
                            (eq dashboard-icon-type (quote nerd-icons)))
                 (error "Dashboard 未启用 Nerd Icons")))
-            (princ (format "theme=%S dashboard=%S icons=%S state=%s\n"
+            (princ (format "theme=%S dashboard=%S icons=%S modeline=%S state=%s\n"
                            custom-enabled-themes
                            (featurep (quote dashboard))
                            (featurep (quote nerd-icons))
+                           (featurep (quote doom-modeline))
                            ssw/state-directory)))'
 
 echo "[4/7] 检查第三方包缺失时的离线降级"
@@ -202,8 +227,9 @@ XDG_CACHE_HOME="$CACHE_HOME/fallback" \
             (unless (= gc-cons-threshold (* 16 1024 1024))
               (error "降级路径的 GC 阈值未恢复"))
             (when (or (featurep (quote dashboard))
-                      (featurep (quote nerd-icons)))
-              (error "空包目录下意外加载了 Dashboard 或 Nerd Icons"))
+                      (featurep (quote nerd-icons))
+                      (featurep (quote doom-modeline)))
+              (error "空包目录下意外加载了第三方界面包"))
             (princ (format "fallback-theme=%S\n" custom-enabled-themes)))'
 
 echo "[5/7] 检查 Nerd Font 字体依赖"

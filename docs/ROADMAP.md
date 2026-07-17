@@ -48,6 +48,7 @@
 3. 将主题切换为 `batppuccin-mocha`。
 4. 使用 Dashboard + Nerd Icons 建立带图标的最近文件、项目和书签入口。
 5. 默认使用最大化普通窗口，并将 Fira Code 调整为 17pt。
+6. 使用 Doom Modeline 建立场景化、可收缩的信息底栏。
 
 后续任务：
 

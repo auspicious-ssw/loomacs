@@ -60,7 +60,7 @@
         ("melpa" . "https://melpa.org/packages/")))
 (package-initialize)
 
-(defconst ssw/declared-packages '(batppuccin dashboard nerd-icons)
+(defconst ssw/declared-packages '(batppuccin dashboard doom-modeline nerd-icons)
   "这套配置明确依赖的第三方包。")
 
 ;; 保留用户通过 package.el 记录的其他本机包，同时保证仓库声明的包可由
@@ -99,6 +99,60 @@
   :if (package-installed-p 'nerd-icons)
   :ensure nil
   :demand t)
+
+;; Doom Modeline 只负责状态信息的组织和展示，不引入 Doom Emacs。常驻内容必须
+;; 能支持当前判断或操作；低频、重复或需要额外服务的内容默认隐藏。
+(use-package doom-modeline
+  :if (package-installed-p 'doom-modeline)
+  :ensure nil
+  :demand t
+  :init
+  (setq doom-modeline-height 32
+        doom-modeline-bar-width 4
+        doom-modeline-hud nil
+        doom-modeline-window-width-limit 80
+        doom-modeline-buffer-file-name-style 'relative-to-project
+
+        ;; 文件状态与语言图标可以快速回答“当前在编辑什么、是否已修改”。
+        doom-modeline-icon t
+        doom-modeline-major-mode-icon t
+        doom-modeline-major-mode-color-icon t
+        doom-modeline-buffer-state-icon t
+        doom-modeline-buffer-modification-icon t
+        doom-modeline-buffer-name t
+        doom-modeline-highlight-modified-buffer-name t
+
+        ;; 位置、选区、项目、Git、诊断、LSP 与远程主机都直接服务编辑操作。
+        doom-modeline-column-zero-based nil
+        doom-modeline-percent-position '(-3 "%p")
+        doom-modeline-position-column-line-format '("%l:%c")
+        doom-modeline-enable-buffer-position t
+        doom-modeline-selection-info t
+        doom-modeline-project-name t
+        doom-modeline-vcs-icon t
+        doom-modeline-vcs-max-length 24
+        doom-modeline-check-icon t
+        doom-modeline-check 'auto
+        doom-modeline-lsp t
+        doom-modeline-lsp-icon t
+        doom-modeline-remote-host t
+        doom-modeline-env-version t
+
+        ;; 这些信息低频、与系统栏重复或会长期占用空间，按需再开启。
+        doom-modeline-minor-modes nil
+        doom-modeline-enable-word-count nil
+        doom-modeline-buffer-encoding nil
+        doom-modeline-indent-info nil
+        doom-modeline-total-line-number nil
+        doom-modeline-workspace-name nil
+        doom-modeline-persp-name nil
+        doom-modeline-modal nil
+        doom-modeline-github nil
+        doom-modeline-battery nil
+        doom-modeline-time nil
+        doom-modeline-display-misc-in-all-mode-lines nil)
+  :config
+  (doom-modeline-mode 1))
 
 ;; Dashboard 的条目由 widget 负责交互。键盘焦点使用独立 overlay 覆盖当前
 ;; widget 范围，避免 box/bar cursor 只压在图标边缘而无法表达“选中整项”。
