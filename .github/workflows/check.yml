@@ -12,12 +12,16 @@ jobs:
   macos-emacs-30:
     runs-on: macos-15
     timeout-minutes: 30
-    env:
-      XDG_STATE_HOME: ${{ runner.temp }}/loomacs-state
-      XDG_CACHE_HOME: ${{ runner.temp }}/loomacs-cache
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      - name: Configure Loomacs CI paths
+        shell: bash
+        run: |
+          # RUNNER_TEMP 只在 Job 已分配到 Runner 后存在，不能用于 Job 级表达式。
+          echo "XDG_STATE_HOME=$RUNNER_TEMP/loomacs-state" >> "$GITHUB_ENV"
+          echo "XDG_CACHE_HOME=$RUNNER_TEMP/loomacs-cache" >> "$GITHUB_ENV"
 
       - name: Install GNU Emacs 30
         run: brew install emacs
