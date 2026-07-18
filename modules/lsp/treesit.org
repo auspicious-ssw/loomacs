@@ -1,0 +1,116 @@
+#+title: Loomacs Tree-sitter
+#+author: SSW
+#+startup: overview
+#+property: header-args:emacs-lisp :comments no :results silent
+
+* 目标
+
+在 grammar 已安装时安全启用 Emacs 30 内置 Tree-sitter major mode，并提供显式安装入口。
+
+* 边界
+
+启动阶段不下载、不编译 grammar；只有用户执行 ~loomacs-treesit-install-language~ 才产生网络与编译副作用。没有 grammar 时保留传统 major mode。
+
+* 依赖
+
+- 上游：~loomacs-lsp~。
+- 内置：~treesit~。
+- 显式安装时外部需要：Git、C/C++ compiler 和网络。
+
+* 配置
+
+#+begin_src emacs-lisp
+;;; loomacs-treesit.el --- 内置 Tree-sitter 配置 -*- lexical-binding: t; -*-
+
+(require 'treesit)
+
+(defvar loomacs-cache-root)
+
+(defconst loomacs-treesit-grammar-directory
+  (file-name-as-directory (expand-file-name "tree-sitter" loomacs-cache-root))
+  "Tree-sitter grammar 的 XDG cache 目录。")
+
+(defconst loomacs-treesit-language-sources
+  '((python "https://github.com/tree-sitter/tree-sitter-python")
+    (javascript "https://github.com/tree-sitter/tree-sitter-javascript")
+    (typescript "https://github.com/tree-sitter/tree-sitter-typescript" nil "typescript/src")
+    (tsx "https://github.com/tree-sitter/tree-sitter-typescript" nil "tsx/src")
+    (json "https://github.com/tree-sitter/tree-sitter-json")
+    (css "https://github.com/tree-sitter/tree-sitter-css")
+    (html "https://github.com/tree-sitter/tree-sitter-html")
+    (bash "https://github.com/tree-sitter/tree-sitter-bash")
+    (c "https://github.com/tree-sitter/tree-sitter-c")
+    (cpp "https://github.com/tree-sitter/tree-sitter-cpp"))
+  "可由用户显式安装的官方 Tree-sitter grammar 源。")
+
+(defconst loomacs-treesit-mode-remaps
+  '((python-mode python-ts-mode python)
+    (js-mode js-ts-mode javascript)
+    (json-mode json-ts-mode json)
+    (css-mode css-ts-mode css)
+    (html-mode html-ts-mode html)
+    (c-mode c-ts-mode c)
+    (c++-mode c++-ts-mode cpp))
+  "只有 grammar 可用时才应用的传统模式到 ts-mode 映射。")
+
+(defconst loomacs-treesit-file-modes
+  '(("\\.ts\\'" typescript-ts-mode typescript)
+    ("\\.tsx\\'" tsx-ts-mode tsx))
+  "需要 grammar 才能安全注册的文件模式。")
+
+(dolist (source loomacs-treesit-language-sources)
+  (setf (alist-get (car source) treesit-language-source-alist) (cdr source)))
+
+(add-to-list 'treesit-extra-load-path loomacs-treesit-grammar-directory)
+
+(setq treesit-font-lock-level 4)
+
+(defun loomacs-treesit-remap-installed-modes ()
+  "只为已安装且 ABI 兼容的 grammar 启用 Tree-sitter mode。"
+  (interactive)
+  (when (treesit-available-p)
+    (dolist (entry loomacs-treesit-mode-remaps)
+      (pcase-let ((`(,legacy-mode ,treesit-mode ,language) entry))
+        (when (and (fboundp treesit-mode)
+                   (treesit-language-available-p language))
+          (setf (alist-get legacy-mode major-mode-remap-alist) treesit-mode))))
+    (dolist (entry loomacs-treesit-file-modes)
+      (pcase-let ((`(,pattern ,treesit-mode ,language) entry))
+        (when (and (fboundp treesit-mode)
+                   (treesit-language-available-p language))
+          (add-to-list 'auto-mode-alist (cons pattern treesit-mode)))))))
+
+(defun loomacs-treesit-install-language (language)
+  "显式下载并编译 LANGUAGE grammar，成功后刷新 mode 映射。"
+  (interactive
+   (list
+    (intern
+     (completing-read
+      "安装 Tree-sitter grammar："
+      (mapcar (lambda (entry) (symbol-name (car entry)))
+              loomacs-treesit-language-sources)
+      nil t))))
+  ;; 网络和本地编译必须来自交互命令，绝不能由启动或打开文件隐式触发。
+  ;; grammar 是可重建产物，必须留在 XDG cache，不能污染 Git 管理的配置根目录。
+  (make-directory loomacs-treesit-grammar-directory t)
+  (set-file-modes loomacs-treesit-grammar-directory #o700)
+  (treesit-install-language-grammar language loomacs-treesit-grammar-directory)
+  (loomacs-treesit-remap-installed-modes))
+
+(loomacs-treesit-remap-installed-modes)
+
+(provide 'loomacs-treesit)
+;;; loomacs-treesit.el ends here
+#+end_src
+
+* 快捷键
+
+~C-c e t~ 显式选择并安装 grammar，~C-c e T~ 重新扫描已安装 grammar；无方向键绑定。
+
+* 验证
+
+无 grammar 时传统 mode 正常；安装后重新打开文件进入对应 ts-mode；失败时不写入 remap，也不影响传统 mode。
+
+* 回滚
+
+移除本子模块并重建即可停止 remap。已编译 grammar 位于 Loomacs XDG cache，按运维说明单独清理，不由启动代码删除。

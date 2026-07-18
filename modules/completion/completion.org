@@ -1,0 +1,75 @@
+#+title: Loomacs Completion
+#+author: SSW
+#+startup: overview
+#+property: header-args:emacs-lisp :comments no :results silent
+
+* 目标
+
+用 Emacs 标准 completion API 统一 minibuffer 与编辑区补全，并保持各组件可独立替换。
+
+* 边界
+
+本模块只定义跨插件的补全基线和领域清单；候选界面、匹配、搜索、对象操作与 CAPF 分别由子模块负责。启动不安装包、不刷新索引。
+
+* 依赖
+
+- 内置：~minibuffer~、~completion~、~use-package~。
+- 第三方：Vertico、Orderless、Marginalia、Consult、Embark、Embark Consult、Corfu、Cape。
+
+* 配置
+
+#+begin_src emacs-lisp
+;;; loomacs-completion.el --- Loomacs 补全领域 -*- lexical-binding: t; -*-
+
+(defgroup loomacs-completion nil
+  "Loomacs 标准补全体系。"
+  :group 'loomacs)
+
+(defconst loomacs-completion-modules
+  '(loomacs-vertico
+    loomacs-orderless
+    loomacs-marginalia
+    loomacs-consult
+    loomacs-embark
+    loomacs-embark-consult
+    loomacs-corfu
+    loomacs-cape)
+  "Completion 领域子模块的确定性加载顺序。")
+
+(defconst loomacs-completion-packages
+  '(vertico orderless marginalia consult embark embark-consult corfu cape)
+  "Completion 领域需要显式安装的直接第三方包。")
+
+(declare-function loomacs-register-packages "loomacs")
+
+;; 注册只更新 package-selected-packages 声明，不刷新索引、不安装包；依赖安装仍是
+;; 用户显式维护动作，离线启动契约不因此改变。
+(when (fboundp 'loomacs-register-packages)
+  (apply #'loomacs-register-packages loomacs-completion-packages))
+
+;; TAB 仍先执行缩进，仅在当前模式提供 completion-at-point 时进入补全。
+;; 这里不替换 Emacs 原生命令，只统一大小写与少量候选时的循环行为。
+(setq tab-always-indent 'complete
+      completion-cycle-threshold 3
+      completion-ignore-case t
+      read-buffer-completion-ignore-case t
+      read-file-name-completion-ignore-case t
+      enable-recursive-minibuffers t)
+
+(provide 'loomacs-completion)
+;;; loomacs-completion.el ends here
+#+end_src
+
+* 快捷键
+
+本总模块不占用快捷键。搜索、对象操作分别使用子模块中的 ~C-c s~、~C-c o~ 用户前缀；~C-g~ 和方向键保持原生语义。
+
+* 验证
+
+- Manifest 中的子模块顺序与 ~loomacs-completion-modules~ 一致。
+- 缺少任一第三方包时 Doctor 报告依赖，启动路径不联网。
+- ~TAB~ 在普通文本中仍可缩进，在有 CAPF 的位置可进入补全。
+
+* 回滚
+
+从 Profile/Manifest 禁用 ~completion~ 领域并重新构建；不删除用户历史或 package.el 状态。

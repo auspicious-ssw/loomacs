@@ -1,0 +1,67 @@
+#+title: Loomacs Packages
+#+author: SSW
+#+startup: overview
+#+property: header-args:emacs-lisp :comments no :results silent
+
+* 目标
+
+使用 Emacs 内置 package.el 与 use-package 提供领域级依赖注册 API，同时确保启动绝不隐式联网。
+
+* 边界
+
+只声明包源和注册 API；第三方包由所属领域声明，不刷新索引，不安装或升级包。
+
+* 依赖
+
+- Emacs 30.2 内置 package.el 和 use-package。
+- 第三方包由显式 bootstrap/install 命令安装。
+
+* 配置
+
+#+begin_src emacs-lisp
+;;; loomacs-packages.el --- Loomacs 包管理 -*- lexical-binding: t; -*-
+
+;; Author: SSW
+;; Maintainer: SSW <https://github.com/auspicious-ssw>
+
+(require 'package)
+
+(setq package-archives
+      '(("gnu" . "https://elpa.gnu.org/packages/")
+        ("nongnu" . "https://elpa.nongnu.org/nongnu/")
+        ("melpa" . "https://melpa.org/packages/"))
+      ;; Magit 的隐式全局键位必须先关闭，再由模块明确声明。
+      magit-define-global-key-bindings nil)
+
+(package-initialize)
+
+(defvar loomacs-declared-packages nil
+  "Loomacs 所有已启用模块明确声明的第三方包。")
+
+(defun loomacs-register-packages (&rest packages)
+  "注册 PACKAGES，并保留 package.el 已记录的其他本机包。"
+  (setq loomacs-declared-packages
+        (delete-dups (append loomacs-declared-packages packages))
+        package-selected-packages
+        (delete-dups (append loomacs-declared-packages
+                             package-selected-packages))))
+
+;; use-package 只描述加载时机；缺包路径必须安全降级。
+(require 'use-package)
+(setq use-package-always-ensure nil)
+
+(provide 'loomacs-packages)
+;;; loomacs-packages.el ends here
+#+end_src
+
+* 快捷键
+
+不定义快捷键。
+
+* 验证
+
+使用空 package-user-dir 离线加载，确认不调用 =package-refresh-contents= 或 =package-install=。
+
+* 回滚
+
+回滚该模块不删除本机 =elpa/= 内容；已安装包可保留供旧 release 使用。

@@ -1,96 +1,158 @@
-* Emacs Config
+#+title: Loomacs
+#+author: SSW
 
-面向 macOS 的轻量原生 Emacs 配置。当前目标是让配置可解释、可验证、可回滚，并在此基础上逐步增加搜索、代码和 GPT 工作流。仓库说明与设计文档以 Org 为主，直接服务于 Emacs 内阅读、编辑和后续学习工作流。
+* Loomacs
 
-** 当前基线
+Loomacs 是一套面向 macOS、由 Org 驱动的模块化 Emacs 配置框架。人工维护
+=config.org=、=profiles/*.org= 与 =modules/**/*.org=；显式构建把它们编织成经过
+验证的 =generated/*.el=，正常启动只离线加载生成物。
 
-- GNU Emacs 30.2 (~emacs-app~)。
-- 配置源码入口： ~config.org~ 是唯一人工维护的主配置； ~config.el~ 是纳入 Git 的 Tangle 产物， ~init.el~ 只在本地离线加载它； ~early-init.el~ 继续负责启动早期行为。
-- 包管理：Emacs 内置 ~package.el~ 与 ~use-package~ 。
-- 主题：已安装 Batppuccin 时使用 ~batppuccin-mocha~ ；缺失时离线回退到内置 ~modus-vivendi-tinted~ 。
-- 首页：Dashboard + Nerd Icons，显示带图标的最近文件、内置 ~project.el~ 项目和书签；插件缺失时安全降级。
-- 底栏：Doom Modeline 按场景显示文件、项目、位置、Git、诊断与 LSP 等有效状态。
-- Git：Magit 按需加载， ~C-x g~ 打开当前仓库状态页；GUI 命令菜单使用 Transient Posframe 居中悬浮，并与内置 ~project.el~ 集成。
-- Org： ~org-modern~ 统一美化标题、列表、表格、标签和源码块； ~org-appear~ 在光标进入时恢复隐藏的强调与链接语法，不改原生 Org 快捷键。
-- 输入法：图形 Emacs 首次启动和新建顶层 GUI frame 时通过 SIS + macism 切到 ABC 英文；child-frame 不触发，之后尊重手动切换，不持续抢占中文输入法。
-- 字体：英文和代码使用 17pt Fira Code，中文回退到 PingFang SC；字体缺失不会阻止启动。
-- 窗口：GUI 默认使用最大化普通窗口，占满可用工作区但保留菜单栏和 Dock。
-- 启动过程不自动刷新包索引或安装第三方包。
+- Author / Maintainer: *SSW*
+- GitHub: [[https://github.com/auspicious-ssw][@auspicious-ssw]]
+- Project: [[https://github.com/auspicious-ssw/loomacs][auspicious-ssw/loomacs]]
+- Framework namespace: =loomacs-=
+- Current version: =0.1.0 (Unreleased)=
+- Verified runtime: GNU Emacs 30.2（=/Applications/Emacs.app=）
+
+第三方插件仍归各自项目与贡献者所有；作者信息指 Loomacs 框架、配置代码和文档。
+
+** 当前能力
+
+- macOS 最大化普通窗口，保留菜单栏和 Dock。
+- 17pt Fira Code，中文使用 PingFang SC，图标使用 Symbols Nerd Font。
+- 新顶层 GUI frame 通过 SIS + macism 切到 ABC 英文；之后尊重手动输入法选择。
+- Batppuccin Mocha 是唯一配置主题；缺包或加载失败时保留 Emacs 默认外观。
+- Dashboard 显示真实 Recent Files、Projects 和 Bookmarks，键盘焦点整项高亮。
+- Doom Modeline 显示项目、Git、诊断和 LSP 等当前有效信息。
+- Magit + Transient Posframe 提供完整 Git 工作流与 GUI 悬浮命令卡片。
+- Org Modern + Org Appear，以及 Agenda、Capture 和源码块编辑。
+- Vertico、Orderless、Marginalia、Consult、Embark、Corfu、Cape 补全体系。
+- 内置 Eglot、xref、Flymake 和 Tree-sitter 代码能力。
+- gptel AI 对话、改写和显式上下文；默认禁用媒体跟踪和工具调用。
+
+** 启动与构建边界
+
+#+begin_example
+early-init.el
+  → init.el
+    → framework/loomacs-bootstrap.el
+      → $XDG_STATE_HOME/loomacs/releases/current/loomacs-manifest.el
+        → 无本机 Release 时回退到 generated/loomacs-manifest.el
+          → 按 Manifest 的绝对路径离线加载 52 个配置单元
+#+end_example
+
+正常启动不会：
+
+- 解析或 Tangle Org；
+- 扫描 =modules/=；
+- 刷新包索引、安装或升级插件；
+- 下载 Tree-sitter grammar；
+- 启动不存在的 Language Server；
+- 读取或发送 AI 凭据；
+- 自动发送文件、buffer 或其他上下文。
 
 ** 安装
 
-#+begin_src bash
-git clone https://github.com/auspicious-ssw/emacs-config.git ~/.config/emacs
+#+begin_src sh
+git clone https://github.com/auspicious-ssw/loomacs.git ~/.config/emacs
 #+end_src
 
-目标目录必须不存在；如果机器上已有 =~/.config/emacs=，先备份并确认其中没有仅存于本机的配置，再执行克隆。
-
-仓库已经跟踪由 ~config.org~ 生成的 ~config.el~ ，因此首次启动不需要先安装 Org 插件、执行 Tangle 或联网。日常修改只编辑 ~config.org~ ，不要直接修改生成文件：
-
-#+begin_src bash
-emacs --batch -Q --eval "(progn (require 'org) (require 'ob-tangle) (org-babel-tangle-file \"config.org\" \"config.el\" \"emacs-lisp\"))"
-./scripts/check.sh
-git diff -- config.org config.el
-#+end_src
-
-首次安装声明的第三方包（Batppuccin、Dashboard、Nerd Icons、Doom Modeline、Magit、Org Modern、Org Appear、SIS 与 Transient Posframe）时，在 Emacs 中执行：
+仓库跟踪 last-known-good =generated/=，因此克隆后即使缺包或离线也能进入基础
+Emacs。首次启动后显式安装 Manifest 声明的第三方包：
 
 #+begin_example
 M-x package-install-selected-packages
 #+end_example
 
-macOS 还需要安装 Nerd Icons 使用的字体：
+也可以从终端使用明确会联网的维护命令：
 
-#+begin_src bash
-brew install --cask font-symbols-only-nerd-font
+#+begin_src sh
+./scripts/install-packages
 #+end_src
 
-SIS 通过独立的 ~macism~ 命令切换 macOS 原生输入源：
+macOS 系统依赖：
 
-#+begin_src bash
+#+begin_src sh
+brew install --cask font-symbols-only-nerd-font
 brew install laishulu/homebrew/macism
 #+end_src
 
-包索引刷新会分别访问 GNU ELPA、NonGNU ELPA 和 MELPA，因此代理软件可能显示多条连接。这是三个明确的软件源请求，不是循环重连。
+插件索引分别来自 GNU ELPA、NonGNU ELPA 和 MELPA，显式刷新时代理出现多个 HTTPS
+连接属于三个独立软件源，不是 Emacs 启动循环联网。
 
-Dashboard 的 Recent Files、Projects 和 Bookmarks 是 Emacs 使用状态，不是下载列表；插件安装在 =~/.config/emacs/elpa/=，不会出现在 =~/Downloads=。
+** 日常修改
 
-** Git 快速入口
+只编辑 Org 源码，不直接编辑 =generated/*.el=：
 
-- ~C-x g~ ：打开当前仓库的 Magit Status。
-- ~C-c g~ ：在任意 buffer 打开 Magit 命令总菜单。
-- ~C-c f~ ：打开只针对当前文件的 Git 菜单，例如 blame、log 和 diff。
-- ~C-x p m~ ：打开当前 ~project.el~ 项目的 Magit Status。
-
-Status 页先掌握 ~TAB~ 展开、~s~ 暂存、~u~ 取消暂存、~c c~ 提交、~g~ 刷新和 ~q~ 返回即可。push、rebase、reset 与丢弃修改都保持手动触发；配置不会自动执行这些操作，也不会移除危险操作确认。
-
-在图形 Emacs 中， ~C-c g~、~C-c f~ 以及 Magit 内的 ~c~、~P~ 等 Transient 菜单会显示为窗口中央的 Batppuccin 悬浮卡片；Status、diff、log 仍使用正常编辑窗口。终端 Emacs 或 child-frame 不可用时自动回退到底部菜单。
-
-** 验证
-
-#+begin_src bash
-./scripts/check.sh
+#+begin_src sh
+./scripts/build
+./scripts/check
+git diff --check
 #+end_src
 
-脚本的目标检查包括 ~config.org~ 与 ~config.el~ 的 Tangle 一致性、 ~init.el~ 的离线加载边界、Elisp 结构、Org 文档与本地链接、Org 美化模式、核心快捷键语义、SIS 的 GUI/TTY frame 边界、第三方包缺失时的离线降级、Magit 延迟加载与临时仓库暂存流程、GC 恢复及 XDG 状态目录边界。它不会在验证中真实切换系统输入源或修改外部应用快捷键；实际通过项以当前命令输出为准。
+=scripts/build= 在仓库同一文件系统的 staging 目录中执行 Tangle、Manifest 依赖检查、
+Elisp 读取检查和 feature 检查。全部通过后才替换 =generated/=、创建不可变 Release
+并切换 =current/previous=；失败不会覆盖现有可启动版本。
 
-** 数据边界
+常用维护命令：
 
-- Git 管理：人工维护的 ~config.org~ 、可直接启动的 ~config.el~ 生成物、引导文件、文档和验证脚本。
-- 本机依赖： ~elpa/~ ，可通过包清单重新安装。
-- 持久运行状态：=${XDG_STATE_HOME:-~/.local/state}/emacs/=，包括最近文件、项目、书签和 Magit/Transient 菜单历史。
-- 可清理缓存：=${XDG_CACHE_HOME:-~/.cache}/emacs/=。
-- 密钥与令牌：不得写入本仓库；未来 GPT 接入使用系统密钥链或 ~auth-source~ 。
+| 命令 | 用途 | 是否联网 |
+|---+---+---|
+| =./scripts/bootstrap= | 准备私有状态目录并运行静态诊断 | 否 |
+| =./scripts/install-packages= | 刷新三个软件源并只安装 Manifest 缺包 | *是* |
+| =./scripts/build= | 构建并发布新 Release | 否 |
+| =./scripts/check= | 一致性、ERT、编译、离线启动检查 | 否 |
+| =./scripts/doctor= | 包、字体、工具、凭据、生成物和 Release 诊断 | 否 |
+| =./scripts/rollback= | 交换 current 与 previous | 否 |
+
+** AI 使用
+
+gptel 不在仓库中保存 API Key，也不固定可能变化的模型。推荐把凭据放进用户自行
+维护的 =~/.authinfo.gpg=：
+
+#+begin_example
+machine api.openai.com login apikey password YOUR_API_KEY
+#+end_example
+
+然后使用 =C-c i m= 打开 gptel 菜单选择后端和模型，=C-c i c= 新建 Org 对话，
+=C-c i s= 显式发送。未选中的文件和 buffer 不会自动成为上下文；自动化验证不会
+发送真实 API 请求或消耗额度。
+
+** 本机数据边界
+
+#+begin_example
+$XDG_STATE_HOME/loomacs/
+├── releases/              # current、previous 与不可变 Release
+├── logs/                  # 构建和诊断日志
+└── state/                 # recentf、bookmarks、history、places、projects
+
+$XDG_CACHE_HOME/loomacs/
+├── editor/                # backup、autosave
+├── build/                 # 可重建构建缓存
+└── tree-sitter/           # 显式安装的 grammar
+#+end_example
+
+状态、缓存、插件源码、编译产物与凭据均不提交 Git。旧版
+=${XDG_STATE_HOME}/emacs/= 中的真实状态只在新文件不存在时复制一次，旧文件保留，
+不会覆盖新状态。
 
 ** 回滚
 
-查看变更历史后，使用非破坏性的反向提交回滚：
+配置运行版本回滚：
 
-#+begin_src bash
-git log --oneline
-git revert <commit>
+#+begin_src sh
+./scripts/rollback
 #+end_src
 
-Literate 配置回滚时，应把 ~config.org~ 与对应的 ~config.el~ 作为同一变更单元一起反向提交。不要直接修补生成文件；如果两者漂移，以 ~config.org~ 为准重新 Tangle，再运行检查。
+该命令不修改 Org 源码、Git 工作区、插件或用户状态。源码历史回滚继续使用可追踪的
+=git revert=，不要使用会覆盖未提交内容的破坏性 reset。
 
-详细设计、路线和排障说明见 [[file:docs/README.org][docs/]]。
+** 文档
+
+- [[file:docs/ARCHITECTURE.org][架构与加载边界]]
+- [[file:docs/MODULE-CONTRACT.org][模块契约]]
+- [[file:docs/OPERATIONS.org][构建、诊断与恢复]]
+- [[file:docs/KEYMAPS.org][快捷键和系统冲突]]
+- [[file:docs/PACKAGES.org][内置模块、插件及版本]]
+- [[file:docs/SECURITY.org][凭据、网络与供应链边界]]
+- [[file:docs/ROADMAP.org][路线图]]

@@ -1,0 +1,13 @@
+#!/bin/sh
+set -eu
+
+ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+EMACS=${EMACS:-emacs}
+
+export LOOMACS_ROOT="$ROOT"
+exec "$EMACS" --batch -Q \
+  --eval '(setq user-emacs-directory (file-name-as-directory (getenv "LOOMACS_ROOT")))' \
+  -L "$ROOT/framework" \
+  -l loomacs-bootstrap \
+  -l loomacs-doctor \
+  --eval '(progn (loomacs-bootstrap-prepare) (loomacs-doctor-batch))'

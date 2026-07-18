@@ -1,0 +1,20 @@
+#+title: Loomacs 本机覆盖示例
+#+author: SSW
+#+property: header-args:emacs-lisp :comments no
+
+* 使用边界
+
+需要本机覆盖时复制为 =profiles/local.org=，把它加入 =config.org= Manifest 后显式构建。
+=profiles/local.org= 应由 Git 忽略；不得在其中保存 API Key、Token 或其他明文凭据。
+
+* 示例
+
+#+begin_src emacs-lisp
+;;; loomacs-profile-local.el --- 本机 Loomacs 覆盖 -*- lexical-binding: t; -*-
+
+;; 示例：只放非敏感的设备差异。
+;; (setq loomacs-font-height 180)
+
+(provide 'loomacs-profile-local)
+;;; loomacs-profile-local.el ends here
+#+end_src

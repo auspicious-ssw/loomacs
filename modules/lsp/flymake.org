@@ -1,0 +1,51 @@
+#+title: Loomacs Flymake
+#+author: SSW
+#+startup: overview
+#+property: header-args:emacs-lisp :comments no :results silent
+
+* 目标
+
+统一显示 Eglot 和 major mode 提供的实时诊断，并提供可发现的列表与无方向键导航。
+
+* 边界
+
+不增加第三方 checker、不降低诊断级别，也不隐藏 backend 错误。Eglot 内部已经使用
+=(flymake-mode 1)= 确保诊断开启，本模块不得再把裸 =flymake-mode= 加进 Hook；无参数
+调用 minor mode 会反向切换并关闭刚启用的诊断。
+
+* 依赖
+
+- 上游：~loomacs-eglot~。
+- 内置：~flymake~。
+
+* 配置
+
+#+begin_src emacs-lisp
+;;; loomacs-flymake.el --- 内置实时诊断 -*- lexical-binding: t; -*-
+
+(declare-function flymake-mode "flymake")
+
+(use-package flymake
+  :ensure nil
+  :commands (flymake-mode flymake-show-buffer-diagnostics
+                          flymake-show-project-diagnostics
+                          flymake-goto-next-error flymake-goto-prev-error)
+  :init
+  (setq flymake-no-changes-timeout 0.5
+        flymake-suppress-zero-counters t))
+
+(provide 'loomacs-flymake)
+;;; loomacs-flymake.el ends here
+#+end_src
+
+* 快捷键
+
+~C-c e d b~ 当前 buffer，~C-c e d a~ 当前项目，~C-c e d n/p~ 下一项/上一项；原生 ~M-g n/p~ 仍保留。
+
+* 验证
+
+制造一个语法或类型错误，状态栏出现诊断且列表能定位；修复并保存后诊断清除。
+
+* 回滚
+
+移除本子模块后，Eglot 仍按内置契约启用 Flymake；只撤销 Loomacs 的参数和入口。

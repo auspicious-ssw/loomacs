@@ -1,0 +1,56 @@
+#+title: Loomacs Org Appear
+#+author: SSW
+#+startup: overview
+#+property: header-args:emacs-lisp :comments no :results silent
+
+* 目标
+
+光标进入隐藏的强调、链接和实体语法时立即恢复完整标记。
+
+* 边界
+
+只处理“显示隐藏语法”，不修改 Org 语义、文档内容或 keymap。
+
+* 依赖
+
+第三方 =org-appear= 包与 Org。
+
+* 配置
+
+#+begin_src emacs-lisp
+;;; loomacs-org-appear.el --- Loomacs Org Appear -*- lexical-binding: t; -*-
+
+;; Author: SSW
+;; Maintainer: SSW <https://github.com/auspicious-ssw>
+
+(eval-when-compile (require 'use-package))
+
+(use-package org-appear
+  :if (package-installed-p 'org-appear)
+  :ensure nil
+  :after org
+  :hook (org-mode . org-appear-mode)
+  :init
+  (setq org-appear-trigger 'always
+        org-appear-delay 0
+        org-appear-autoemphasis t
+        org-appear-autolinks t
+        org-appear-autosubmarkers t
+        org-appear-autoentities t
+        org-appear-inside-latex t))
+
+(provide 'loomacs-org-appear)
+;;; loomacs-org-appear.el ends here
+#+end_src
+
+* 快捷键
+
+不定义快捷键；显示状态只跟随光标。
+
+* 验证
+
+光标进出强调、链接、上下标和 LaTeX，确认标记无延迟出现且文件未修改。
+
+* 回滚
+
+停用 =org-appear-mode= 即回到 Org 的 =org-hide-emphasis-markers= 默认显示。

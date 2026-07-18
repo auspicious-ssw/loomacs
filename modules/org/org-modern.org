@@ -1,0 +1,60 @@
+#+title: Loomacs Org Modern
+#+author: SSW
+#+startup: overview
+#+property: header-args:emacs-lisp :comments no :results silent
+
+* 目标
+
+统一美化 Org 标题折叠、列表、复选框、表格、标签、时间戳和源码块。
+
+* 边界
+
+不叠加 org-superstar 或 org-bullets，不改写 Org 文档文本。
+
+* 依赖
+
+第三方 =org-modern= 包与 Org。
+
+* 配置
+
+#+begin_src emacs-lisp
+;;; loomacs-org-modern.el --- Loomacs Org Modern -*- lexical-binding: t; -*-
+
+;; Author: SSW
+;; Maintainer: SSW <https://github.com/auspicious-ssw>
+
+(eval-when-compile (require 'use-package))
+
+(use-package org-modern
+  :if (package-installed-p 'org-modern)
+  :ensure nil
+  :after org
+  :hook (org-mode . org-modern-mode)
+  :init
+  (setq org-modern-star 'fold
+        org-modern-hide-stars 'leading
+        org-modern-label-border 0.12
+        org-modern-table-vertical 1
+        org-modern-table-horizontal 0.10
+        org-modern-block-fringe 3)
+  :config
+  ;; 结构符号继续使用已验证等宽字体，避免与中文回退字体基线漂移。
+  (when (and (boundp 'loomacs-font-family)
+             (find-font (font-spec :family loomacs-font-family)))
+    (set-face-attribute 'org-modern-symbol nil :family loomacs-font-family)))
+
+(provide 'loomacs-org-modern)
+;;; loomacs-org-modern.el ends here
+#+end_src
+
+* 快捷键
+
+不定义 keymap，所有 Org 原生键位保持不变。
+
+* 验证
+
+打开包含列表、复选框、表格和源码块的 Org，确认 =org-modern-mode= 开启且内容 diff 为空。
+
+* 回滚
+
+删除 hook 或停用模块，Org 立即回到原生显示，无数据迁移。

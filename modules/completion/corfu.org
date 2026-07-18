@@ -1,0 +1,63 @@
+#+title: Loomacs Corfu
+#+author: SSW
+#+startup: overview
+#+property: header-args:emacs-lisp :comments no :results silent
+
+* 目标
+
+在 GUI 编辑区用轻量悬浮候选框展示标准 completion-at-point 结果。
+
+* 边界
+
+默认关闭自动触发：部分 CAPF 可能执行项目代码，用户必须按 ~TAB~ / ~M-TAB~ 显式请求补全。Emacs 30 的 TTY 不增加额外兼容包。
+
+* 依赖
+
+- 上游：~loomacs-completion~、~loomacs-orderless~。
+- 第三方：~corfu~。
+
+* 配置
+
+#+begin_src emacs-lisp
+;;; loomacs-corfu.el --- 编辑区悬浮补全 -*- lexical-binding: t; -*-
+
+(declare-function global-corfu-mode "corfu")
+(declare-function corfu-history-mode "corfu-history")
+(declare-function corfu-popupinfo-mode "corfu-popupinfo")
+
+(use-package corfu
+  :if (package-installed-p 'corfu)
+  :ensure nil
+  :defines (corfu-history corfu-popupinfo-delay savehist-additional-variables)
+  :init
+  ;; 自动补全可能调用来自文件/模式的 CAPF。默认手动触发可避免仅打开不可信文件
+  ;; 就执行补全后端，同时仍让所有标准 completion-at-point 来源共享同一个 UI。
+  (setq corfu-auto nil
+        corfu-cycle t
+        corfu-on-exact-match nil
+        corfu-preselect 'prompt
+        corfu-preview-current nil
+        global-corfu-minibuffer nil)
+  (global-corfu-mode 1)
+  :config
+  (corfu-history-mode 1)
+  (corfu-popupinfo-mode 1)
+  (setq corfu-popupinfo-delay '(0.5 . 0.2))
+  (with-eval-after-load 'savehist
+    (add-to-list 'savehist-additional-variables 'corfu-history)))
+
+(provide 'loomacs-corfu)
+;;; loomacs-corfu.el ends here
+#+end_src
+
+* 快捷键
+
+使用插件标准 ~TAB~、~M-TAB~、~M-n~、~M-p~、~RET~、~M-h~ 与 ~C-g~；未新增方向键绑定，也不改变弹窗外的按键。
+
+* 验证
+
+在有 CAPF 的代码位置按 ~TAB~ 显示 child-frame 候选；~M-h~ 显示说明；~C-g~ 只关闭补全并保留 buffer。
+
+* 回滚
+
+移除本子模块并重建，~completion-at-point~ 自动恢复当前模式/Emacs 的原生 UI。

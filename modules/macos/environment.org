@@ -1,0 +1,53 @@
+#+title: Loomacs macOS Environment
+#+author: SSW
+#+startup: overview
+#+property: header-args:emacs-lisp :comments no :results silent
+
+* 目标
+
+为 Finder 启动的 GUI Emacs 提供安全、显式的 Homebrew 可执行文件查找。
+
+* 边界
+
+不导入 shell 配置，不执行登录 shell，不全局改写 PATH。
+
+* 依赖
+
+macOS 上可能的 =/opt/homebrew/bin= 或 =/usr/local/bin= 安装路径。
+
+* 配置
+
+#+begin_src emacs-lisp
+;;; loomacs-environment.el --- Loomacs macOS 环境 -*- lexical-binding: t; -*-
+
+;; Author: SSW
+;; Maintainer: SSW <https://github.com/auspicious-ssw>
+
+(defconst loomacs-macos-executable-prefixes
+  '("/opt/homebrew/bin" "/usr/local/bin")
+  "GUI Emacs 中允许查找工具的显式前缀。")
+
+(defun loomacs-macos-find-executable (name)
+  "返回 NAME 的可执行绝对路径，不修改 PATH。"
+  (or (executable-find name)
+      (catch 'found
+        (dolist (prefix loomacs-macos-executable-prefixes)
+          (let ((candidate (expand-file-name name prefix)))
+            (when (file-executable-p candidate)
+              (throw 'found candidate)))))))
+
+(provide 'loomacs-environment)
+;;; loomacs-environment.el ends here
+#+end_src
+
+* 快捷键
+
+不定义快捷键。
+
+* 验证
+
+在清空 PATH 的 batch 环境中检查已存在 Homebrew 工具可被找到，且 =exec-path= 不变。
+
+* 回滚
+
+停用该模块后，依赖方回到 =executable-find= 的环境行为。

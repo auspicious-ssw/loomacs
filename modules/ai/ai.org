@@ -1,0 +1,82 @@
+#+title: Loomacs AI
+#+author: SSW
+#+startup: overview
+#+property: header-args:emacs-lisp :comments no :results silent
+
+* 目标
+
+把 AI 作为 Org、文本与代码 buffer 中的显式辅助能力，并让用户始终控制发送内容、模型和后端。
+
+* 边界
+
+启动不联网、不读取密钥、不固定可能过期的模型名；不自动发送文件、媒体或上下文，不允许默认工具调用。AI 输出是建议，不代表测试或事实验证。
+
+* 依赖
+
+- 内置：~auth-source~、Org。
+- 第三方：~gptel~。
+- 可选外部命令：~curl~。
+
+* 配置
+
+#+begin_src emacs-lisp
+;;; loomacs-ai.el --- Loomacs AI 领域 -*- lexical-binding: t; -*-
+
+(defgroup loomacs-ai nil
+  "Loomacs 中由用户显式触发的 AI 工作流。"
+  :group 'loomacs)
+
+(defconst loomacs-ai-modules
+  '(loomacs-auth-source loomacs-gptel)
+  "AI 领域子模块的确定性加载顺序。")
+
+(defconst loomacs-ai-packages '(gptel)
+  "AI 领域需要显式安装的直接第三方包。")
+
+;; 这里只声明可由 package.el 显式维护的依赖；不会在启动阶段读取包索引或联网。
+(when (fboundp 'loomacs-register-packages)
+  (apply #'loomacs-register-packages loomacs-ai-packages))
+
+(defconst loomacs-ai-network-policy 'explicit-command
+  "AI 网络请求只能由用户调用 gptel 命令触发。")
+
+;; AI 入口先于 gptel 延迟加载建立 keymap；这些声明只提供静态编译契约，
+;; 不 require gptel，也不会在启动时读取凭据或产生网络请求。
+(declare-function loomacs-register-packages "loomacs")
+(declare-function gptel "gptel")
+(declare-function gptel-add "gptel")
+(declare-function gptel-add-file "gptel")
+(declare-function gptel-menu "gptel")
+(declare-function gptel-rewrite "gptel")
+(declare-function gptel-send "gptel")
+
+(defvar-keymap loomacs-ai-map
+  :doc "Loomacs AI 命令。"
+  "a" #'gptel-add
+  "c" #'gptel
+  "f" #'gptel-add-file
+  "m" #'gptel-menu
+  "r" #'gptel-rewrite
+  "s" #'gptel-send)
+
+(when (package-installed-p 'gptel)
+  ;; C-c i 属于用户保留空间，不占用 Org 的 C-c l 或 Emacs 的 C-g。
+  (keymap-global-set "C-c i" loomacs-ai-map))
+
+(provide 'loomacs-ai)
+;;; loomacs-ai.el ends here
+#+end_src
+
+* 快捷键
+
+~C-c i c~ 新建对话，~C-c i s~ 发送当前内容/选区，~C-c i r~ 改写选区，~C-c i a/f~ 显式添加上下文。
+
+* 验证
+
+- 普通启动不产生 AI 网络连接，也不访问认证文件。
+- 未配置凭据时只有首次显式请求提示认证，不阻断编辑器。
+- 不选择上下文、不添加文件时请求不得包含其他 buffer 或媒体。
+
+* 回滚
+
+从 Profile/Manifest 禁用 ~ai~ 领域并重新构建；认证资料留在用户管理的加密存储中，不由 Loomacs 删除。

@@ -1,0 +1,42 @@
+#+title: Loomacs Saveplace
+#+author: SSW
+#+startup: overview
+#+property: header-args:emacs-lisp :comments no :results silent
+
+* 目标
+
+重新打开文件时恢复上次光标位置。
+
+* 边界
+
+仅保存位置元数据，不改写用户文件内容。
+
+* 依赖
+
+Emacs 内置 saveplace，保存路径由 =loomacs-state= 设置。
+
+* 配置
+
+#+begin_src emacs-lisp
+;;; loomacs-saveplace.el --- Loomacs 光标位置 -*- lexical-binding: t; -*-
+
+;; Author: SSW
+;; Maintainer: SSW <https://github.com/auspicious-ssw>
+
+(save-place-mode 1)
+
+(provide 'loomacs-saveplace)
+;;; loomacs-saveplace.el ends here
+#+end_src
+
+* 快捷键
+
+不定义快捷键。
+
+* 验证
+
+在文件中移动、关闭、重启并重新打开，确认 point 恢复。
+
+* 回滚
+
+执行 =(save-place-mode -1)= 或停用模块；位置文件不自动删除。

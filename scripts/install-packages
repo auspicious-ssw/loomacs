@@ -1,0 +1,40 @@
+#!/bin/sh
+set -eu
+
+ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+EMACS=${EMACS:-emacs}
+
+export LOOMACS_ROOT="$ROOT"
+exec "$EMACS" --batch -Q \
+  --eval '(setq user-emacs-directory (file-name-as-directory (getenv "LOOMACS_ROOT")))' \
+  --eval '(progn
+            (require (quote cl-lib))
+            (require (quote package))
+            (setq package-user-dir
+                  (expand-file-name "elpa" user-emacs-directory)
+                  package-archives
+                  (quote (("gnu" . "https://elpa.gnu.org/packages/")
+                          ("nongnu" . "https://elpa.nongnu.org/nongnu/")
+                          ("melpa" . "https://melpa.org/packages/"))))
+            (package-initialize)
+            (load (expand-file-name "generated/loomacs-manifest.el"
+                                    user-emacs-directory)
+                  nil (quote nomessage) t)
+            (let (packages)
+              (dolist (module (plist-get loomacs-manifest :modules))
+                (dolist (package (plist-get module :packages))
+                  (cl-pushnew package packages)))
+              (setq packages
+                    (sort packages
+                          (lambda (left right)
+                            (string< (symbol-name left)
+                                     (symbol-name right)))))
+              ;; 这是唯一显式联网维护入口之一；正常启动、build、check 与 doctor
+              ;; 都不能调用刷新或安装函数。
+              (package-refresh-contents)
+              (dolist (package packages)
+                (unless (package-installed-p package)
+                  (princ (format "Installing %s...\n" package))
+                  (package-install package)))
+              (princ (format "Loomacs packages ready: %d\n"
+                             (length packages)))))'

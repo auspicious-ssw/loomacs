@@ -1,0 +1,48 @@
+#+title: Loomacs Nerd Icons
+#+author: SSW
+#+startup: overview
+#+property: header-args:emacs-lisp :comments no :results silent
+
+* 目标
+
+为 Dashboard、Doom Modeline 和兼容插件提供成熟图标 API。
+
+* 边界
+
+不自制图标字体或复制插件图标映射；缺包时退化为文字。
+
+* 依赖
+
+- 第三方 =nerd-icons= 包。
+- Symbols Nerd Font（由 Doctor 检查）。
+
+* 配置
+
+#+begin_src emacs-lisp
+;;; loomacs-nerd-icons.el --- Loomacs Nerd Icons -*- lexical-binding: t; -*-
+
+;; Author: SSW
+;; Maintainer: SSW <https://github.com/auspicious-ssw>
+
+(eval-when-compile (require 'use-package))
+
+(use-package nerd-icons
+  :if (package-installed-p 'nerd-icons)
+  :ensure nil
+  :demand t)
+
+(provide 'loomacs-nerd-icons)
+;;; loomacs-nerd-icons.el ends here
+#+end_src
+
+* 快捷键
+
+不定义快捷键。
+
+* 验证
+
+在真实 GUI 中检查 Dashboard 与 Modeline 无方框缺字，并验证缺包启动。
+
+* 回滚
+
+停用后两个上层插件回到文字或自身降级表示。

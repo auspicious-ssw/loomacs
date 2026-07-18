@@ -1,0 +1,48 @@
+#+title: Loomacs Auth Source
+#+author: SSW
+#+startup: overview
+#+property: header-args:emacs-lisp :comments no :results silent
+
+* 目标
+
+明确 AI 凭据只通过 Emacs 内置 ~auth-source~ 在请求时取得，并缩短解密后凭据的内存缓存时间。
+
+* 边界
+
+本模块不创建、读取、输出或迁移任何密钥；不覆盖用户已有 ~auth-sources~，也不支持仓库内明文凭据。
+
+* 依赖
+
+- 上游：~loomacs-ai~。
+- 内置：~auth-source~、EasyPG（使用加密认证文件时）。
+
+* 配置
+
+#+begin_src emacs-lisp
+;;; loomacs-auth-source.el --- AI 凭据边界 -*- lexical-binding: t; -*-
+
+(require 'auth-source)
+
+(defconst loomacs-auth-source-recommended-file
+  (expand-file-name "~/.authinfo.gpg")
+  "建议由用户自行维护的加密 auth-source 文件；Loomacs 不创建或读取它。")
+
+;; auth-source 默认可能缓存数小时。缩短到 15 分钟可减少解密凭据长期驻留内存，
+;; 同时避免每个连续请求都重新解锁；这里只设置缓存生命周期，不触发凭据查询。
+(setq auth-source-cache-expiry 900)
+
+(provide 'loomacs-auth-source)
+;;; loomacs-auth-source.el ends here
+#+end_src
+
+* 快捷键
+
+不新增快捷键；凭据管理继续使用 Emacs 原生 auth-source / EasyPG 命令。
+
+* 验证
+
+Doctor 只确认认证机制和建议文件状态，不回显 host、login、secret 或环境变量值；普通启动不触发 GPG 解锁。
+
+* 回滚
+
+移除本子模块恢复 Emacs 默认缓存期限；用户的加密认证文件不改动、不删除。

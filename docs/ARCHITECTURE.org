@@ -1,101 +1,154 @@
-* 配置架构
+#+title: Loomacs 架构
+#+author: SSW
 
-** 目标
+* 目标与约束
 
-这套配置首先是一套可解释的个人 Emacs 配置，其次才是功能集合。当前重点是把 macOS 上的 Emacs 变成稳定主编辑器，并为后续代码开发和 GPT 接入留出清晰扩展点。
+Loomacs 把“可阅读的 Org 配置源码”和“可离线启动的 Elisp 运行产物”明确分开：
 
-** 当前目录
+1. Org 是唯一人工维护的配置事实源。
+2. 构建是显式维护动作，不属于启动流程。
+3. 运行时只加载已验证 Manifest 的精确文件，不扫描目录。
+4. 插件安装、Tree-sitter grammar、Language Server 和 AI 请求都不隐式发生。
+5. 构建失败不得替换 last-known-good。
+6. 配置回滚不回滚 recentf、bookmark、文档或其他用户状态。
 
-#+begin_example
-~/.config/emacs/
-├── README.org                 # GitHub 项目入口、安装、验证和回滚
-├── .gitignore                 # 排除本机包、状态、缓存与编译产物
-├── early-init.el              # 启动早期配置：GC、package 启动、基础 UI
-├── init.el                    # 最小引导：只离线加载本地 config.el
-├── config.org                 # 唯一人工维护的 Literate 主配置
-├── config.el                  # config.org 的受控 Tangle 产物，由 Git 跟踪
-├── elpa/                      # 本机第三方包，Git 忽略，可显式重建
-├── scripts/check.sh           # 不联网的配置、Tangle 一致性回归检查
-└── docs/*.org                 # Org 格式的架构、决策、路线与运维文档
+* 公共命名空间
 
-${XDG_STATE_HOME:-~/.local/state}/emacs/
-├── custom.el                  # Customize 持久设置
-├── history                    # 命令和 minibuffer 历史
-├── places                     # 文件光标位置
-├── recentf                    # 最近文件列表
-├── projects                   # project.el 已知项目
-├── bookmarks                  # Emacs 书签
-└── transient/                 # Magit 菜单参数、层级和历史
+Loomacs 使用四层命名边界：
 
-${XDG_CACHE_HOME:-~/.cache}/emacs/
-├── backups/                   # 备份文件
-├── auto-save/                 # autosave 内容
-└── auto-save-list/            # autosave 会话索引
-#+end_example
+| 层级 | 规则 | 示例 |
+|---+---+---|
+| Lisp 公共符号 | =loomacs-= | =loomacs-build= |
+| 模块符号 | =loomacs-模块-= | =loomacs-dashboard-setup= |
+| 私有函数 | 双连字符 | =loomacs-dashboard--update-selection= |
+| Feature/生成文件 | =loomacs-= | =loomacs-dashboard=、=loomacs-dashboard.el= |
+| Manifest 模块 ID | 无前缀内部数据 | =dashboard= |
+| 第三方插件 | 保持上游名字 | =dashboard=、=magit=、=gptel= |
 
-** 当前加载关系
+=framework/loomacs.el= 唯一拥有顶层 =defgroup=、版本和最低已验证 Emacs 版本。
+模块不得定义裸全局符号，也不得 =provide 'org=、='dashboard= 等上游 feature。
 
-#+begin_example
-Emacs 启动
-├── early-init.el
-│   ├── 临时提高 GC 阈值
-│   ├── 注册 GC 恢复兜底
-│   ├── 禁用 package-enable-at-startup
-│   ├── 初始 frame 与后续 frame 默认最大化
-│   └── 关闭 menu/tool/scroll bar，减少启动闪烁
-└── init.el
-    └── 离线加载仓库内 config.el
-        ├── 基础编辑体验与 XDG state/cache 边界
-        ├── package.el、use-package、主题、字体和 macOS 修饰键
-        ├── Dashboard、Doom Modeline 与 Org 视觉
-        ├── Magit、Transient Posframe 与 project.el 入口
-        ├── SIS + macism 顶层 GUI frame 输入源策略
-        └── 恢复正常 GC 阈值
-#+end_example
-
-~config.org~ 是上图中 ~config.el~ 的唯一人工维护来源。 ~config.el~ 被纳入 Git，使全新克隆和离线机器无需先运行 Org 或 Tangle 即可启动； ~scripts/check.sh~ 负责阻止两者漂移。生成文件用于执行和审查，不作为第二个人工编辑入口。
-
-** 当前模块边界
-
-当前配置还没有拆分 ~lisp/~ 模块。原因是配置量仍适合由一个按章节组织的 ~config.org~ 解释和生成，暂不为拆分而拆分； ~init.el~ 刻意保持为稳定的最小引导层。
-
-后续配置增长后，建议演进为：
+* 源码结构
 
 #+begin_example
 ~/.config/emacs/
 ├── early-init.el
 ├── init.el
-├── config.org                 # 继续作为总入口，Tangle 各模块
-├── config.el                  # 或缩减为模块加载清单
-├── lisp/
-│   ├── core-options.el        # 基础选项
-│   ├── core-ui.el             # 主题、字体、frame、modeline
-│   ├── core-keymaps.el        # 全局快捷键
-│   ├── core-packages.el       # package/use-package 基础
-│   ├── core-completion.el     # minibuffer 与补全
-│   ├── core-code.el           # eglot、语言模式和代码体验
-│   ├── core-git.el            # magit 等 Git 能力
-│   └── core-ai.el             # gptel 与 GPT 工作流
-└── docs/
+├── config.org
+├── README.org
+├── AUTHORS.org
+├── CHANGELOG.org
+├── framework/
+│   ├── loomacs.el
+│   ├── loomacs-bootstrap.el
+│   ├── loomacs-paths.el
+│   ├── loomacs-profile.el
+│   ├── loomacs-module.el
+│   ├── loomacs-loader.el
+│   ├── loomacs-tangle.el
+│   ├── loomacs-build.el
+│   ├── loomacs-release.el
+│   ├── loomacs-doctor.el
+│   └── loomacs-log.el
+├── profiles/
+│   ├── default.org
+│   ├── macos.org
+│   └── local.org.example
+├── modules/
+│   ├── core/         # core + startup/state/packages/editing
+│   ├── macos/        # macos + environment/frame/font/input-source/keymap
+│   ├── navigation/   # navigation + project/recentf/bookmark/savehist/saveplace
+│   ├── ui/           # ui + batppuccin/nerd-icons/dashboard/doom-modeline
+│   ├── completion/   # completion + Vertico/Orderless/Consult/Corfu 等
+│   ├── git/          # git + Magit/Transient/Transient Posframe
+│   ├── org/          # org + core/modern/appear/agenda/capture/src
+│   ├── lsp/          # lsp + Eglot/xref/Flymake/Tree-sitter
+│   └── ai/           # ai + auth-source/gptel
+├── generated/        # 构建生成并由 Git 跟踪
+├── lock/             # 直接与传递依赖版本/commit
+├── docs/             # 仅框架级说明
+├── scripts/          # 人类与 CI 的稳定命令入口
+└── test/             # 框架行为 ERT
 #+end_example
 
-** 配置与状态文件边界
+每个领域目录至少包含一个总 Org 和多个子 Org。总 Org 只负责领域目标、包清单、
+确定性顺序和跨插件整合；每个插件或独立能力由自己的 Org 唯一拥有。
 
-- =~/.config/emacs/= 是可复现源码边界，由 Git 管理。
-- ~config.org~ 是配置语义与说明的单一事实源； ~config.el~ 是必须与其同步提交的生成物，不直接手改。
-- =~/.local/state/emacs/=（或 ~XDG_STATE_HOME~ ）保存应跨重启保留、但不应共享到 Git 的本机状态。
-- =~/.cache/emacs/=（或 ~XDG_CACHE_HOME~ ）保存可以安全重建的缓存、备份和 autosave。
-- ~elpa/~ 是本机依赖安装目录，不提交；依赖事实由 ~package-selected-packages~ 声明。
-- Magit 只在首次调用时加载；Transient 菜单状态写入 XDG state，不在配置目录生成 ~transient/~ 。
-- ~transient-posframe~ 只接管 Transient 命令菜单：GUI 使用 child-frame，TTY/不可用环境恢复原生 side window；它不接管 Magit Status、diff、log 或其他普通 buffer。
-- ~sis~ 只管理输入源边界，实际 macOS 切换由 Homebrew 安装的 ~macism~ 完成；配置仅在顶层 GUI frame 创建时切到 ABC，忽略 Posframe 等 child-frame，不启用 respect、context、inline、cursor 或轮询模式。
-- ~org-modern~ 只处理 Org 结构的文字属性和排版， ~org-appear~ 只在光标进入时恢复隐藏语法；两者按 Org buffer 加载，不叠加职责重复的 ~org-superstar~ 或 ~org-bullets~ 。
-- ~ssw/sync-transient-posframe~ 与 ~ssw/select-english-input-source~ 是本机策略适配层，不复制插件核心功能。当前体量不足以成为新插件；若继续增长，先拆到仓库内 ~lisp/~ 模块，再根据是否存在可复用公共 API 决定是否独立发布。
-- 根说明与 ~docs/~ 统一使用 Org 格式；仓库不保存等价 Markdown 副本，避免入口、链接和决策形成两份事实源。
-- 密钥不属于任何上述源码文件，未来统一交给系统密钥链或 ~auth-source~ 。
+* Manifest
 
-旧版生成在配置根目录的 ~history~、~recentf~、~places~ 和 ~auto-save-list/~ 仅作为迁移前遗留文件被 ~.gitignore~ 排除；新版本不再向这些路径写入。
+=config.org= 只生成一个普通 plist，不定义宏 DSL：
 
-** 与 Neovim 配置的边界
+#+begin_src emacs-lisp
+'(:format 1
+  :profile macos
+  :requirements (...)
+  :modules
+  ((:id dashboard
+    :feature loomacs-dashboard
+    :source "modules/ui/dashboard.org"
+    :output "ui/loomacs-dashboard.el"
+    :requires (ui batppuccin nerd-icons project recentf bookmark)
+    :packages (dashboard)
+    :critical nil)))
+#+end_src
 
-Neovim 配置位于 =~/.config/nvim/=，Emacs 配置位于 =~/.config/emacs/=。两者当前互不依赖。后续如果 Emacs 成为主编辑器，Neovim 可以保留为备用终端编辑器，不需要立即删除。
+构建阶段验证必填字段、唯一 ID/feature/source/output、安全相对路径、未知依赖和
+循环依赖，再使用稳定拓扑排序固化加载顺序。运行时仍复核所有生成文件的 Lisp
+结构和 =provide=，但不重新解释依赖意图或扫描源码目录。
+
+* 构建数据流
+
+#+begin_example
+config.org
+  └─显式 target Tangle→ staging/generated/loomacs-manifest.el
+       └─解析并验证依赖图
+            └─逐个 Org 显式 target Tangle 到 staging
+                 ├─验证输出没有越出 staging
+                 ├─完整读取每个 Elisp 文件
+                 ├─核对 feature
+                 └─记录全部源码 SHA-256
+                      └─替换仓库 generated/
+                           └─复制为本机不可变 Release
+                                └─切换 current/previous
+#+end_example
+
+Org 源文件禁止写 =:tangle yes= 或具体路径。实测这些参数会覆盖 builder 的 staging
+目标并写回源码旁；=loomacs-tangle-file= 会在产生任何输出前拒绝这种配置，并在
+Tangle 后再次核对 Org 返回路径。
+
+* 启动数据流
+
+#+begin_example
+early-init.el
+  ├─临时 GC 放宽
+  ├─禁用 package-enable-at-startup
+  └─最大化普通 frame
+
+init.el
+  └─绝对路径加载 framework/loomacs-bootstrap.el
+       ├─优先选择 $XDG_STATE_HOME/loomacs/releases/current/
+       ├─没有 current 时选择仓库 generated/
+       └─读取 loomacs-manifest.el
+            └─按生成路径依次 load 模块并核对 feature
+#+end_example
+
+启动路径不加载 =loomacs-build.el= 或 =loomacs-tangle.el=，因此不会因为 Org 外观、
+保存 hook、网络或构建工具而改变运行行为。
+
+* 状态与缓存
+
+- 仓库：可复现源码、生成物、锁文件、文档和测试。
+- =$XDG_STATE_HOME/loomacs/state/=：history、recentf、projects、bookmarks、places、custom。
+- =$XDG_STATE_HOME/loomacs/releases/=：本机 current、previous 和不可变 Release。
+- =$XDG_STATE_HOME/loomacs/logs/=：构建与诊断日志。
+- =$XDG_CACHE_HOME/loomacs/editor/=：backup 和 autosave。
+- =$XDG_CACHE_HOME/loomacs/tree-sitter/=：显式安装、可重建的 grammar。
+- =~/.authinfo.gpg= 或系统凭据存储：AI 密钥；永不进入仓库和日志。
+
+* 已借鉴而未复制的设计
+
+- [[https://github.com/doomemacs/modules/tree/main/modules][Doom Emacs modules]]：类别/模块目录和贴近模块的文档契约。
+- [[https://github.com/SystemCrafters/crafted-emacs/tree/master/modules][Crafted Emacs modules]]：原生、显式的 Emacs Lisp 模块思路。
+
+Loomacs 不复制 Doom 的宏、CLI、autoload 生成器或包管理器，也不把个人配置伪装
+成 ELPA 插件。第一版不支持热重载；发布新配置后正常重启 Emacs，边界更可靠。

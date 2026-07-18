@@ -1,0 +1,49 @@
+#+title: Loomacs Vertico
+#+author: SSW
+#+startup: overview
+#+property: header-args:emacs-lisp :comments no :results silent
+
+* 目标
+
+用 Vertico 在 minibuffer 中垂直展示标准 Emacs completion 候选。
+
+* 边界
+
+Vertico 只负责候选 UI，不负责匹配规则、注释或搜索数据源；缺包时保留 Emacs 原生 completion。
+
+* 依赖
+
+- 上游：~loomacs-completion~。
+- 第三方：~vertico~。
+
+* 配置
+
+#+begin_src emacs-lisp
+;;; loomacs-vertico.el --- Vertico 候选界面 -*- lexical-binding: t; -*-
+
+(declare-function vertico-mode "vertico")
+
+(use-package vertico
+  :if (package-installed-p 'vertico)
+  :ensure nil
+  :init
+  (setq vertico-count 12
+        vertico-cycle t
+        vertico-resize t)
+  (vertico-mode 1))
+
+(provide 'loomacs-vertico)
+;;; loomacs-vertico.el ends here
+#+end_src
+
+* 快捷键
+
+沿用 Vertico/Emacs 的 ~C-n~、~C-p~、~TAB~、~RET~ 和 ~C-g~；不新增方向键绑定。
+
+* 验证
+
+执行 ~M-x~ 或 ~C-x C-f~，候选纵向显示且可循环；~C-g~ 立即取消 minibuffer。
+
+* 回滚
+
+从 Completion Manifest 移除 ~loomacs-vertico~ 并重建，自动恢复 Emacs 原生候选界面。

@@ -1,0 +1,46 @@
+#+title: Loomacs Marginalia
+#+author: SSW
+#+startup: overview
+#+property: header-args:emacs-lisp :comments no :results silent
+
+* 目标
+
+为命令、文件、buffer 等候选补充可用于判断的上下文注释。
+
+* 边界
+
+只增加 annotation，不改变候选值、动作或排序，也不定义全局快捷键。
+
+* 依赖
+
+- 上游：~loomacs-vertico~。
+- 第三方：~marginalia~。
+
+* 配置
+
+#+begin_src emacs-lisp
+;;; loomacs-marginalia.el --- 候选注释 -*- lexical-binding: t; -*-
+
+(declare-function marginalia-mode "marginalia")
+
+(use-package marginalia
+  :if (package-installed-p 'marginalia)
+  :ensure nil
+  :init
+  (marginalia-mode 1))
+
+(provide 'loomacs-marginalia)
+;;; loomacs-marginalia.el ends here
+#+end_src
+
+* 快捷键
+
+不新增快捷键；需要临时切换注释器时使用 ~M-x marginalia-cycle~。
+
+* 验证
+
+~M-x~ 候选显示命令说明，~C-x C-f~ 候选显示文件属性；选择结果与原生 completion 一致。
+
+* 回滚
+
+移除本子模块并重建，候选仍可用但不再显示额外注释。

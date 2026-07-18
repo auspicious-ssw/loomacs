@@ -1,0 +1,46 @@
+#+title: Loomacs Org Source Blocks
+#+author: SSW
+#+startup: overview
+#+property: header-args:emacs-lisp :comments no :results silent
+
+* 目标
+
+在 Org 文档中以对应 major mode 高亮和编辑源码块，服务 Loomacs 的 literate 源码。
+
+* 边界
+
+只负责源码块显示与编辑；不在启动期间 Tangle，不绕过 Babel 执行确认。
+
+* 依赖
+
+Emacs 内置 Org src 与 ob-tangle；Loomacs Builder 负责显式构建。
+
+* 配置
+
+#+begin_src emacs-lisp
+;;; loomacs-org-src.el --- Loomacs Org 源码块 -*- lexical-binding: t; -*-
+
+;; Author: SSW
+;; Maintainer: SSW <https://github.com/auspicious-ssw>
+
+(defvar org-src-fontify-natively)
+(defvar org-src-tab-acts-natively)
+
+(setq org-src-fontify-natively t
+      org-src-tab-acts-natively t)
+
+(provide 'loomacs-org-src)
+;;; loomacs-org-src.el ends here
+#+end_src
+
+* 快捷键
+
+保留 Org 原生 =C-c '= 打开源码块编辑 buffer，=C-c C-c= 按 Babel 安全规则执行。
+
+* 验证
+
+检查 Emacs Lisp、shell 和其他已启用语言块的高亮与 =C-c '= 往返；启动时不得产生文件。
+
+* 回滚
+
+停用模块仅取消增强显示，Org 源码块文本和标头参数不变。

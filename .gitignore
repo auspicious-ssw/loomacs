@@ -13,6 +13,10 @@
 /transient/
 /tree-sitter/
 /url/
+/profiles/local.org
+/.loomacs-build-*
+/.loomacs-build.lock/
+/.loomacs-generated-backup*
 
 # 本机凭据与环境覆盖
 /.authinfo

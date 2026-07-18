@@ -1,0 +1,45 @@
+#+title: Loomacs Xref
+#+author: SSW
+#+startup: overview
+#+property: header-args:emacs-lisp :comments no :results silent
+
+* 目标
+
+保留 Emacs 原生定义、引用和跳转栈作为所有语言后端的统一入口。
+
+* 边界
+
+不以 Embark/Consult 覆盖 Xref 命令；仅在本机存在 ~rg~ 时选择更快的项目搜索程序。
+
+* 依赖
+
+- 上游：~loomacs-lsp~；Eglot 可作为 Xref backend。
+- 内置：~xref~。
+- 可选外部命令：~rg~。
+
+* 配置
+
+#+begin_src emacs-lisp
+;;; loomacs-xref.el --- 原生代码跳转 -*- lexical-binding: t; -*-
+
+(use-package xref
+  :ensure nil
+  :commands (xref-find-definitions xref-find-references xref-go-back xref-go-forward)
+  :init
+  (setq xref-search-program (if (executable-find "rg") 'ripgrep 'grep)))
+
+(provide 'loomacs-xref)
+;;; loomacs-xref.el ends here
+#+end_src
+
+* 快捷键
+
+完整保留 Emacs 原生 ~M-.~ 定义、~M-?~ 引用、~M-,~ 返回和 ~C-M-,~ 前进。
+
+* 验证
+
+Elisp buffer 可跳到已加载符号；Eglot 管理的 buffer 使用 LSP backend；~M-,~ 能回到调用位置。
+
+* 回滚
+
+移除本子模块只撤销搜索程序选择，Xref 仍作为 Emacs 内置功能存在。

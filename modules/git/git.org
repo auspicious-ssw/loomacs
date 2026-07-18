@@ -1,0 +1,54 @@
+#+title: Loomacs Git 总模块
+#+author: SSW
+#+startup: overview
+#+property: header-args:emacs-lisp :comments no :results silent
+
+* 目标
+
+将 Magit 作为唯一 Git 工作台，并在 GUI 中把 Transient 命令菜单显示为悬浮卡片。
+
+* 边界
+
+不引入 Forge、Projectile、diff-hl 或 Git 发行版；不自动 commit、push、rebase 或静默保存。
+
+* 依赖
+
+=loomacs-transient= 、=loomacs-magit= 与 =loomacs-transient-posframe=。
+
+* 配置
+
+#+begin_src emacs-lisp
+;;; loomacs-git.el --- Loomacs Git 领域 -*- lexical-binding: t; -*-
+
+;; Author: SSW
+;; Maintainer: SSW <https://github.com/auspicious-ssw>
+
+(declare-function loomacs-register-packages "loomacs-packages" (&rest packages))
+
+(defconst loomacs-git-modules
+  '(loomacs-transient
+    loomacs-magit
+    loomacs-transient-posframe)
+  "Git 领域的有序子模块 feature 清单。")
+
+(defconst loomacs-git-packages
+  '(magit transient transient-posframe)
+  "Git 领域直接使用的第三方包。")
+
+(apply #'loomacs-register-packages loomacs-git-packages)
+
+(provide 'loomacs-git)
+;;; loomacs-git.el ends here
+#+end_src
+
+* 快捷键
+
+=C-x g= 打开仓库状态，=C-c g= 打开全局 Git 菜单，=C-c f= 打开当前文件菜单。
+
+* 验证
+
+检查启动时 Magit 未提前加载，首次调用时快捷键、窗口布局和危险操作确认正常。
+
+* 回滚
+
+可单独停用 Posframe 保留 Magit；状态、diff 和 Git 仓库本身不被改写。

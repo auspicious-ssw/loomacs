@@ -1,0 +1,92 @@
+#+title: Loomacs 模块契约
+#+author: SSW
+
+* 源码模板
+
+每个 =modules/领域/单元.org= 必须包含：
+
+#+begin_example
+#+title: Loomacs 单元名
+#+author: SSW
+#+property: header-args:emacs-lisp :comments no :results silent
+
+,* 目标
+,* 边界
+,* 依赖
+,* 配置
+,#+begin_src emacs-lisp
+;;; loomacs-unit.el --- 描述 -*- lexical-binding: t; -*-
+...
+(provide 'loomacs-unit)
+;;; loomacs-unit.el ends here
+,#+end_src
+,* 快捷键
+,* 验证
+,* 回滚
+#+end_example
+
+不得在 Org 中写 =:tangle yes=、=:tangle 路径= 或调用安装命令。输出目标只由
+=config.org= Manifest 和 builder 决定。
+
+* 所有权
+
+- 一个公共变量、快捷键或行为只能有一个 owner。
+- Profile 拥有设备参数；模块消费参数，不重复定义。
+- =framework/loomacs-paths.el= 拥有 XDG 根路径。
+- Core Packages 只拥有 package.el/use-package 和注册 API。
+- 各领域总 Org 拥有该领域第三方包清单。
+- 子 Org 只拥有一个插件或独立能力。
+- 总 Org 不 =require= 子模块；Manifest 是唯一加载者。
+- 模块不得直接修改其他模块私有变量或复制第三方插件实现。
+
+* Lisp 命名
+
+| 对象 | 规则 |
+|---+---|
+| 文件 | =loomacs-单元.el= |
+| Feature | =loomacs-单元= |
+| 公共命令 | =loomacs-单元-动作= |
+| 私有函数 | =loomacs-单元--动作= |
+| 自定义组 | =loomacs-领域= |
+| 外部插件变量 | 保持上游名字 |
+
+模块 ID 可以是 =org= 或 =dashboard=，因为它只存在于受校验 Manifest 数据中；
+全局 Lisp 符号不能使用无前缀名字。
+
+* 加载与降级
+
+- 内置关键模块的错误必须阻断加载并报告模块 ID、文件和原始错误。
+- 第三方外观/增强模块在包缺失时用 =package-installed-p= 明确跳过。
+- 缺包由 Doctor 报告；模块不得联网补装或吞掉已安装包的真实配置错误。
+- 所有外部进程必须有明确触发条件。Eglot 只在本地项目且 server 存在时自动启动。
+- Tree-sitter grammar 下载和 AI 请求只允许来自用户显式命令。
+
+* Manifest 字段
+
+| 字段 | 含义 |
+|---+---|
+| =:id= | 唯一内部模块 ID |
+| =:feature= | 必须以 =loomacs-= 开头 |
+| =:source= | 仓库内安全相对 Org 路径 |
+| =:output= | =generated/= 下安全相对 Elisp 路径 |
+| =:requires= | 硬依赖 ID 列表 |
+| =:packages= | Doctor/包维护使用的第三方包 |
+| =:critical= | 显式记录设计意图，不用于静默吞错 |
+| =:description= | 诊断和文档描述 |
+
+* 验收
+
+新增模块至少通过：
+
+1. Org 结构和必需章节检查。
+2. 显式 staging target Tangle，且返回路径唯一等于目标。
+3. 完整 Lisp read。
+4. 唯一 =provide= 与 =lexical-binding: t=。
+5. 与改动相关的 ERT 或离线 smoke test。
+6. =./scripts/build= 后 =./scripts/check=。
+7. GUI、字体、Dashboard 或 Posframe 变化还需真实 macOS GUI 验收。
+
+* 回滚
+
+模块 Org 与对应生成文件是同一个变更单元。运行版本用 =scripts/rollback= 切换；
+源码用 =git revert= 留下审计记录。不得手改 generated 修补问题。

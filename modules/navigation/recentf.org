@@ -1,0 +1,71 @@
+#+title: Loomacs Recentf
+#+author: SSW
+#+startup: overview
+#+property: header-args:emacs-lisp :comments no :results silent
+
+* 目标
+
+保存并恢复最近访问的真实文件，供 Dashboard 与导航命令共享。
+
+* 边界
+
+不生成演示数据，不把最近文件清单提交到 Git；XDG 运行状态与缓存不是用户文档，
+不得占用 Dashboard 的有限 Recent Files 位置。
+
+* 依赖
+
+Emacs 内置 recentf，保存路径由 =loomacs-state= 设置。
+
+* 配置
+
+#+begin_src emacs-lisp
+;;; loomacs-recentf.el --- Loomacs 最近文件 -*- lexical-binding: t; -*-
+
+;; Author: SSW
+;; Maintainer: SSW <https://github.com/auspicious-ssw>
+
+(eval-when-compile (require 'use-package))
+
+(require 'seq)
+
+(defvar loomacs-state-root)
+(defvar loomacs-cache-root)
+(defvar loomacs-legacy-state-root)
+(defvar recentf-exclude)
+(declare-function recentf-cleanup "recentf" ())
+
+(defun loomacs-recentf--runtime-file-p (file)
+  "FILE 位于 Loomacs 当前/旧状态或缓存目录时返回非 nil。"
+  (let ((expanded (expand-file-name file)))
+    (seq-some
+     (lambda (root)
+       (string-prefix-p (file-name-as-directory (expand-file-name root))
+                        expanded))
+     (list loomacs-state-root loomacs-cache-root loomacs-legacy-state-root))))
+
+(use-package recentf
+  :ensure nil
+  :demand t
+  :init
+  (setq recentf-max-saved-items 100)
+  :config
+  (add-to-list 'recentf-exclude #'loomacs-recentf--runtime-file-p)
+  (recentf-mode 1)
+  (recentf-cleanup))
+
+(provide 'loomacs-recentf)
+;;; loomacs-recentf.el ends here
+#+end_src
+
+* 快捷键
+
+不新增键位；Dashboard 中的 =r= 由 Dashboard 模块处理。
+
+* 验证
+
+打开真实文件、退出并重启，确认它仍在 =recentf-list= 与 Dashboard 中；当前与旧版
+XDG state/cache 文件不得出现在 Dashboard。
+
+* 回滚
+
+停用 =recentf-mode= 不删除已保存列表。

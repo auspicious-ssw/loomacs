@@ -1,0 +1,41 @@
+name: Loomacs Check
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  macos-emacs-30:
+    runs-on: macos-15
+    timeout-minutes: 30
+    env:
+      XDG_STATE_HOME: ${{ runner.temp }}/loomacs-state
+      XDG_CACHE_HOME: ${{ runner.temp }}/loomacs-cache
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install GNU Emacs 30
+        run: brew install emacs
+
+      - name: Install declared Emacs packages
+        run: ./scripts/install-packages
+
+      - name: Rebuild generated configuration
+        run: ./scripts/build
+
+      - name: Verify generated configuration is committed
+        shell: bash
+        run: |
+          # 构建只能验证源码可生成；这里同时阻止漏提交修改或新增的 last-known-good 产物。
+          if [[ -n "$(git status --porcelain -- generated/)" ]]; then
+            git status --short -- generated/
+            echo "generated/ differs from the committed Org sources" >&2
+            exit 1
+          fi
+
+      - name: Run Loomacs checks
+        run: ./scripts/check

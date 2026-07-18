@@ -1,0 +1,77 @@
+#+title: Loomacs Magit
+#+author: SSW
+#+startup: overview
+#+property: header-args:emacs-lisp :comments no :results silent
+
+* 目标
+
+用 Magit 提供状态、diff、stage、commit、log、branch、stash 和远端 Git 工作流。
+
+* 边界
+
+按需加载，保留危险操作确认；不自动保存、提交、推送、重置或变基。
+
+* 依赖
+
+- 第三方 =magit= 包。
+- =transient= 和 Emacs 内置 project.el。
+
+* 配置
+
+#+begin_src emacs-lisp
+;;; loomacs-magit.el --- Loomacs Magit -*- lexical-binding: t; -*-
+
+;; Author: SSW
+;; Maintainer: SSW <https://github.com/auspicious-ssw>
+
+(eval-when-compile
+  (require 'use-package)
+  (require 'project))
+
+(declare-function magit-display-buffer-same-window-except-diff-v1 "magit-mode")
+(declare-function magit-restore-window-configuration "magit-mode")
+
+(use-package magit
+  :if (package-installed-p 'magit)
+  :ensure nil
+  :commands (magit-status
+             magit-dispatch
+             magit-file-dispatch
+             magit-project-status)
+  :bind (("C-x g" . magit-status)
+         ("C-c g" . magit-dispatch)
+         ("C-c f" . magit-file-dispatch))
+  :init
+  (setq magit-display-buffer-function
+        #'magit-display-buffer-same-window-except-diff-v1
+        magit-bury-buffer-function #'magit-restore-window-configuration
+        ;; 仅对已访问 hunk 细化词级差异，避免大型 diff 一次性展开导致停顿。
+        magit-diff-refine-hunk t
+        magit-save-repository-buffers t
+        magit-no-confirm nil
+        magit-repository-directories '(("~/Projects/" . 2)
+                                       ("~/.config/" . 1))
+        magit-clone-default-directory "~/Projects/")
+  ;; 复用 project.el 的项目边界，不维护第二份项目数据库。
+  (with-eval-after-load 'project
+    (keymap-set project-prefix-map "m" #'magit-project-status)
+    (add-to-list 'project-switch-commands
+                 '(magit-project-status "Magit") t)))
+
+(provide 'loomacs-magit)
+;;; loomacs-magit.el ends here
+#+end_src
+
+* 快捷键
+
+- =C-x g= 打开当前仓库 Status。
+- =C-c g= 打开 Magit 总菜单，=C-c f= 打开当前文件菜单。
+- =C-x p m= 从 project.el 打开项目 Status。
+
+* 验证
+
+在真实 Git 仓库检查 Status、hunk stage/unstage、diff、commit 取消和 =q= 窗口恢复；不执行真实 push。
+
+* 回滚
+
+停用模块后三个 Loomacs 键位不再注册，Git 仓库和未提交内容不受影响。

@@ -1,0 +1,42 @@
+#+title: Loomacs Savehist
+#+author: SSW
+#+startup: overview
+#+property: header-args:emacs-lisp :comments no :results silent
+
+* 目标
+
+持久化 minibuffer 和命令历史，让重启不打断搜索与操作连续性。
+
+* 边界
+
+只使用 Emacs 内置 savehist；历史仅保存在用户私有 XDG 状态目录。
+
+* 依赖
+
+Emacs 内置 savehist，保存路径由 =loomacs-state= 设置。
+
+* 配置
+
+#+begin_src emacs-lisp
+;;; loomacs-savehist.el --- Loomacs 命令历史 -*- lexical-binding: t; -*-
+
+;; Author: SSW
+;; Maintainer: SSW <https://github.com/auspicious-ssw>
+
+(savehist-mode 1)
+
+(provide 'loomacs-savehist)
+;;; loomacs-savehist.el ends here
+#+end_src
+
+* 快捷键
+
+不新增键位；保留 minibuffer 原生历史导航。
+
+* 验证
+
+执行命令后退出并重启，确认历史可回调且文件位于 XDG state。
+
+* 回滚
+
+执行 =(savehist-mode -1)= 或停用模块；历史文件保留以便恢复。

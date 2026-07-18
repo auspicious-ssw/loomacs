@@ -1,0 +1,100 @@
+#+title: Loomacs 模块与插件清单
+#+author: SSW
+
+* 状态说明
+
+检查日期：2026-07-18。版本来自本机 =package-desc= 与 =lock/packages.el=；是否实际
+启用还取决于对应领域是否进入 Manifest。启动不会自动安装、升级或刷新索引。
+
+* Emacs 与内置模块
+
+| 模块 | 版本/来源 | Loomacs 用途 |
+|---+---+---|
+| GNU Emacs | 30.2 | 已验证运行环境 |
+| package.el | 随 Emacs | 软件源、本机包激活与显式维护 |
+| use-package | 随 Emacs | 延迟加载、Hook 和快捷键声明 |
+| Org | 9.7.11 / 随 Emacs | 配置源码、文档、Agenda、Capture |
+| ob-tangle | 随 Org | 显式构建阶段 Org → Elisp |
+| project.el | 随 Emacs | 项目发现、Dashboard Projects、Magit 集成 |
+| recentf | 随 Emacs | Dashboard Recent Files |
+| bookmark | 随 Emacs | Dashboard Bookmarks |
+| savehist | 随 Emacs | minibuffer 与命令历史 |
+| saveplace | 随 Emacs | 文件光标位置 |
+| widget | 随 Emacs | Dashboard 按钮交互基础 |
+| seq / cl-lib | 随 Emacs | 框架数据校验与拓扑排序 |
+| xref | 随 Emacs | 定义、引用和跳转历史 |
+| Eglot | 随 Emacs | LSP 客户端 |
+| Flymake | 随 Emacs | 实时诊断 |
+| Tree-sitter | 随 Emacs | 结构化语法高亮和 ts-mode |
+| auth-source / EasyPG | 随 Emacs | 加密凭据解析，不保存密钥到仓库 |
+
+* 直接第三方依赖
+
+| 包 | 锁定版本 | 领域 | 用途 |
+|---+---+---+---|
+| batppuccin | 20260703.608 | UI | 唯一配置主题 =batppuccin-mocha= |
+| dashboard | 20260402.436 | UI | 启动首页与真实状态入口 |
+| nerd-icons | 20260710.1627 | UI | Dashboard 与 Modeline 图标 |
+| doom-modeline | 20260708.823 | UI | 场景化状态栏 |
+| sis | 20260711.608 | macOS | 经 macism 切换 ABC 输入源 |
+| magit | 20260717.1531 | Git | Git Status、stage、commit、branch 等完整工作流 |
+| transient | 20260701.1255 | Git | Magit 与 gptel 的结构化命令菜单 |
+| transient-posframe | 20241212.940 | Git/UI | GUI 中把 Transient 菜单显示为悬浮 child-frame |
+| org-modern | 20260707.1016 | Org | 标题、列表、表格、标签和源码块排版 |
+| org-appear | 20260716.2120 | Org | 光标进入时恢复隐藏标记 |
+| vertico | 20260709.1303 | Completion | 纵向 minibuffer 候选列表 |
+| orderless | 20260519.1029 | Completion | 多组件无序匹配 |
+| marginalia | 20260519.1044 | Completion | 候选元数据注释 |
+| consult | 20260716.1105 | Completion | buffer、文件、ripgrep、行和标记搜索 |
+| embark | 20260610.302 | Completion | 针对当前候选或对象执行动作 |
+| embark-consult | 20260503.118 | Completion | Embark Collect 与 Consult 预览整合 |
+| corfu | 20260718.726 | Completion | 编辑区 completion-at-point 悬浮候选 |
+| cape | 20260519.1021 | Completion | 文件、dabbrev、Org Elisp block 等 CAPF |
+| gptel | 20260715.1547 | AI | Org AI 对话、发送、改写和显式上下文 |
+
+* 已锁定传递依赖
+
+| 包 | 锁定版本 | 主要调用方 |
+|---+---+---|
+| compat | 31.0.0.2 | Completion、Magit、Org Modern、gptel |
+| cond-let | 20260701.1237 | Magit/Transient |
+| llama | 20260601.1455 | Magit/Transient |
+| magit-section | 20260709.950 | Magit |
+| with-editor | 20260701.1252 | Magit |
+| posframe | 20260527.857 | Transient Posframe |
+| dash | 20260221.1346 | Doom Modeline/shrink-path |
+| f | 20241003.1131 | shrink-path |
+| s | 20220902.1511 | f/shrink-path |
+| shrink-path | 20190208.1335 | Doom Modeline |
+
+完整 Git commit 与上游 URL 见 [[file:../lock/packages.el][lock/packages.el]]。包锁用于诊断、升级审查和
+回滚取证；MELPA 是滚动源，版本号本身不等于永久可下载归档。
+
+* 本机外部依赖
+
+| 能力 | 当前证据 | 用途 |
+|---+---+---|
+| Git | =/usr/bin/git= | Magit 与项目版本控制 |
+| ripgrep | =/opt/homebrew/bin/rg= | Consult Ripgrep、xref 搜索 |
+| macism | =/opt/homebrew/bin/macism= | macOS 输入源切换 |
+| Fira Code | 已发现 | 17pt 代码字体 |
+| PingFang SC | 已发现 | 中文字体回退 |
+| Symbols Nerd Font Mono | 已发现 | 图标字形 |
+| pyright-langserver | 已发现 | Python Eglot |
+| typescript-language-server | 已发现 | JavaScript/TypeScript Eglot |
+| vscode-json-language-server | 已发现 | JSON Eglot |
+| vscode-css-language-server | 已发现 | CSS Eglot |
+| vscode-html-language-server | 已发现 | HTML Eglot |
+| vscode-markdown-language-server | 已发现 | Markdown Eglot（marksman 可作为替代） |
+
+Tree-sitter runtime 可用；Python、JavaScript、TypeScript、TSX、JSON、CSS、HTML、Bash、
+C 和 C++ grammar 已显式安装到 =$XDG_CACHE_HOME/loomacs/tree-sitter/=。后续 grammar
+下载与编译仍只能由 =C-c e t= 等显式命令触发，不属于 Emacs 启动。
+
+* 使用判断
+
+- =package.el=、=use-package=、Org、project、状态模块和框架内核属于必需能力。
+- 第三方主题、Dashboard、Modeline、补全、Magit、Org 美化和 gptel 都有明确配置。
+- 缺少第三方包时基础 Emacs 可离线启动；Doctor 会把缺包列为错误，不能据此声称
+  完整 Loomacs 已启用。
+- AI 凭据和 Language Server 是本机能力，不属于 Emacs 包，也不进入包锁。

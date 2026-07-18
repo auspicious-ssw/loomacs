@@ -1,0 +1,55 @@
+#+title: Loomacs Core 总模块
+#+author: SSW
+#+startup: overview
+#+property: header-args:emacs-lisp :comments no :results silent
+
+* 目标
+
+定义 Core 领域的公共边界和确定性加载顺序。
+
+* 边界
+
+本文件只声明子模块顺序和启动收尾 API，不重复子模块配置。
+
+* 依赖
+
+- Emacs 30.2。
+- =loomacs-startup= 、=loomacs-state= 、=loomacs-packages= 和 =loomacs-editing=。
+
+* 配置
+
+#+begin_src emacs-lisp
+;;; loomacs-core.el --- Loomacs Core 领域 -*- lexical-binding: t; -*-
+
+;; Author: SSW
+;; Maintainer: SSW <https://github.com/auspicious-ssw>
+
+(defconst loomacs-core-modules
+  '(loomacs-startup
+    loomacs-state
+    loomacs-packages
+    loomacs-editing)
+  "Core 领域的有序子模块 feature 清单。")
+
+(defun loomacs-core-finalize-startup ()
+  "在 Loomacs 模块全部加载后恢复交互阶段 GC 参数。"
+  ;; early-init 也会在 emacs-startup-hook 中执行同一恢复。这里的
+  ;; 显式收尾用于手工加载以及启动链未经过正常 hook 的场景。
+  (when (fboundp 'loomacs-restore-gc-settings)
+    (loomacs-restore-gc-settings)))
+
+(provide 'loomacs-core)
+;;; loomacs-core.el ends here
+#+end_src
+
+* 快捷键
+
+不定义快捷键。
+
+* 验证
+
+检查 =loomacs-core-modules= 顺序，并在 manifest 加载后确认 GC 恢复为交互值。
+
+* 回滚
+
+从 Profile 中停用 Core 会使配置无法正常运行；应回滚整个已验证 release，不单独删除本文件。

@@ -1,16 +1,27 @@
-;;; init.el --- 加载 Org 生成的主配置 -*- lexical-binding: t; -*-
+;;; init.el --- Loomacs 稳定离线入口 -*- lexical-binding: t; -*-
 
-;; Emacs 只会自动读取 init.el；真正的人工维护入口是 config.org。这里仅加载
-;; 已跟踪的生成文件，避免每次启动都提前加载 Org 或在启动路径写文件。
-(defconst ssw/bootstrap-generated-config
-  (expand-file-name "config.el" user-emacs-directory)
-  "由 config.org 生成并供启动加载的配置文件。")
+;; Author: SSW
+;; Maintainer: SSW <https://github.com/auspicious-ssw>
 
-(unless (file-readable-p ssw/bootstrap-generated-config)
-  (error "缺少生成配置 %s；请从 config.org 重新 tangle"
-         ssw/bootstrap-generated-config))
+;; init.el 只定位并调用稳定 bootstrap。正常启动不加载 Org 构建器、不扫描模块、
+;; 不安装包、不刷新软件源，也不访问网络。
+(defconst loomacs-init-root-directory
+  (file-name-as-directory
+   (file-name-directory (or load-file-name user-init-file user-emacs-directory)))
+  "当前 Loomacs 配置仓库根目录。")
 
-(load ssw/bootstrap-generated-config nil 'nomessage)
+(defconst loomacs-init-bootstrap-file
+  (expand-file-name "framework/loomacs-bootstrap.el"
+                    loomacs-init-root-directory)
+  "Loomacs 稳定 bootstrap 文件。")
+
+(unless (file-readable-p loomacs-init-bootstrap-file)
+  (error "缺少 Loomacs bootstrap：%s" loomacs-init-bootstrap-file))
+
+(declare-function loomacs-bootstrap "loomacs-bootstrap")
+
+(load loomacs-init-bootstrap-file nil 'nomessage t)
+(loomacs-bootstrap)
 
 (provide 'init)
 ;;; init.el ends here

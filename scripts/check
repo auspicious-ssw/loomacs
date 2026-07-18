@@ -1,0 +1,245 @@
+#!/bin/sh
+set -eu
+
+ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+EMACS=${EMACS:-emacs}
+TMP_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/loomacs-check.XXXXXX")
+
+cleanup() {
+  chmod -R u+w "$TMP_ROOT" 2>/dev/null || true
+  rm -rf "$TMP_ROOT"
+}
+trap cleanup EXIT HUP INT TERM
+
+cd "$ROOT"
+export LOOMACS_ROOT="$ROOT"
+
+printf '%s\n' '[1/8] Shell、Git whitespace 与敏感文件边界'
+for script in scripts/bootstrap scripts/build scripts/check scripts/check.sh \
+              scripts/doctor scripts/install-packages scripts/rollback; do
+  sh -n "$script"
+done
+git diff --check
+if git ls-files | grep -E '(^|/)(\.authinfo(\.gpg)?|\.env(\..*)?|.*\.(pem|key|p12|pfx))$' >/dev/null; then
+  printf '%s\n' 'ERROR: Git 跟踪了凭据或密钥文件' >&2
+  exit 1
+fi
+
+printf '%s\n' '[2/8] Org 结构、Lint 与本地链接'
+"$EMACS" --batch -Q \
+  --eval '(setq user-emacs-directory (file-name-as-directory (getenv "LOOMACS_ROOT")))' \
+  --eval '(progn
+            (require (quote org))
+            (require (quote org-lint))
+            (require (quote org-element))
+            (require (quote seq))
+            (let* ((root user-emacs-directory)
+                   (files
+                    (seq-filter
+                     (lambda (file)
+                       (not (string-match-p "/\\(?:elpa\\|\\.git\\)/" file)))
+                     (directory-files-recursively root "\\.org\\(?:\\.example\\)?$")))
+                   failures)
+              (dolist (file files)
+                (with-current-buffer (find-file-noselect file)
+                  (org-mode)
+                  (dolist (issue (org-lint))
+                    (push (format "%s: %S" file issue) failures))
+                  (org-element-map (org-element-parse-buffer) (quote link)
+                    (lambda (link)
+                      (when (string-equal (org-element-property :type link) "file")
+                        (let ((target
+                               (expand-file-name
+                                (org-element-property :path link)
+                                (file-name-directory file))))
+                          (unless (file-exists-p target)
+                            (push (format "%s: 缺少本地链接 %s" file target)
+                                  failures))))))
+                  (set-buffer-modified-p nil)
+                  (kill-buffer (current-buffer))))
+              (when failures
+                (dolist (failure (nreverse failures)) (princ (concat failure "\n")))
+                (error "Org 检查失败：%d 项" (length failures)))
+              (princ (format "Org files=%d\n" (length files)))))'
+
+printf '%s\n' '[3/8] Manifest、生成物、依赖锁与本机要求'
+./scripts/doctor
+
+printf '%s\n' '[4/8] 框架 ERT'
+"$EMACS" --batch -Q \
+  --eval '(setq user-emacs-directory (file-name-as-directory (getenv "LOOMACS_ROOT")))' \
+  -L "$ROOT/framework" -L "$ROOT/test" \
+  -l ert \
+  -l loomacs-module-test \
+  -l loomacs-loader-test \
+  -l loomacs-build-test \
+  -l loomacs-tangle-test \
+  -l loomacs-release-test \
+  -l loomacs-doctor-test \
+  -l loomacs-startup-test \
+  -f ert-run-tests-batch-and-exit
+
+printf '%s\n' '[5/8] Framework、测试、入口与生成模块严格编译'
+LOOMACS_COMPILE_DIR="$TMP_ROOT/compile" \
+"$EMACS" --batch -Q \
+  --eval '(setq user-emacs-directory (file-name-as-directory (getenv "LOOMACS_ROOT")))' \
+  -L "$ROOT/framework" \
+  --eval '(progn
+            (require (quote package))
+            (package-initialize)
+            (require (quote bytecomp))
+            (make-directory (getenv "LOOMACS_COMPILE_DIR") t)
+            (setq byte-compile-error-on-warn t
+                  byte-compile-dest-file-function
+                  (lambda (source)
+                    (expand-file-name
+                     (concat (file-name-base source) ".elc")
+                     (getenv "LOOMACS_COMPILE_DIR"))))
+            (load (expand-file-name "generated/loomacs-manifest.el"
+                                    user-emacs-directory)
+                  nil (quote nomessage) t)
+            (let ((load-path
+                   (append
+                    (list (expand-file-name "framework" user-emacs-directory)
+                          (expand-file-name "test" user-emacs-directory))
+                    (mapcar
+                     (lambda (directory)
+                       (file-name-as-directory directory))
+                     (seq-filter
+                      (lambda (path) (file-directory-p path))
+                      (directory-files-recursively
+                       (expand-file-name "generated" user-emacs-directory)
+                       ".*" t)))
+                    load-path))
+                  (files
+                   (append
+                    (list (expand-file-name "early-init.el" user-emacs-directory)
+                          (expand-file-name "init.el" user-emacs-directory)
+                          (expand-file-name "lock/packages.el" user-emacs-directory))
+                    (directory-files-recursively
+                     (expand-file-name "framework" user-emacs-directory) "\\.el$")
+                    (directory-files-recursively
+                     (expand-file-name "test" user-emacs-directory) "\\.el$")
+                    (mapcar
+                     (lambda (module)
+                       (expand-file-name
+                        (plist-get module :output)
+                        (expand-file-name "generated" user-emacs-directory)))
+                     (plist-get loomacs-manifest :modules)))))
+              (dolist (file files)
+                (unless (byte-compile-file file)
+                  (error "编译没有产生输出：%s" file)))
+              (princ (format "Compiled=%d\n" (length files)))))'
+
+printf '%s\n' '[6/8] 已安装依赖的离线启动与快捷键语义'
+XDG_STATE_HOME="$TMP_ROOT/installed-state" \
+XDG_CACHE_HOME="$TMP_ROOT/installed-cache" \
+"$EMACS" --batch -Q \
+  --eval '(setq user-emacs-directory (file-name-as-directory (getenv "LOOMACS_ROOT")))' \
+  --load "$ROOT/early-init.el" \
+  --load "$ROOT/init.el" \
+  --eval '(progn
+            (unless (and loomacs-bootstrap-complete-p
+                         (= (length loomacs-loaded-modules) 52))
+              (error "Loomacs 未完整加载：%S" loomacs-loaded-modules))
+            (dolist (module (plist-get loomacs-manifest :modules))
+              (unless (featurep (plist-get module :feature))
+                (error "配置 feature 未加载：%S" (plist-get module :feature))))
+            (unless (eq loomacs-active-profile (quote macos))
+              (error "Profile 错误：%S" loomacs-active-profile))
+            (unless (memq (quote batppuccin-mocha) custom-enabled-themes)
+              (error "Batppuccin 未启用：%S" custom-enabled-themes))
+            (dolist (mode (quote (vertico-mode marginalia-mode
+                                  global-corfu-mode doom-modeline-mode)))
+              (unless (and (boundp mode) (symbol-value mode))
+                (error "全局模式未启用：%S" mode)))
+            (when (or (featurep (quote magit)) (featurep (quote gptel)))
+              (error "Magit/gptel 应保持延迟加载"))
+            ;; Eglot 会显式 `(flymake-mode 1)`；把裸 flymake-mode 再放进 Hook
+            ;; 会因 toggle 语义关闭诊断，这是必须长期防止的真实回归。
+            (when (and (boundp (quote eglot-managed-mode-hook))
+                       (memq (quote flymake-mode) eglot-managed-mode-hook))
+              (error "eglot-managed-mode-hook 不得用裸 flymake-mode 切换诊断"))
+            (unless (eq (key-binding (kbd "C-g")) (quote keyboard-quit))
+              (error "C-g 不再是 keyboard-quit"))
+            (dolist (binding (quote (("C-x g" . magit-status)
+                                     ("C-c a" . loomacs-org-agenda)
+                                     ("C-c c" . loomacs-org-capture)
+                                     ("C-c l" . org-store-link))))
+              (unless (eq (key-binding (kbd (car binding))) (cdr binding))
+                (error "快捷键漂移 %s -> %S" (car binding)
+                       (key-binding (kbd (car binding))))))
+            (dolist (prefix (quote ("C-c s" "C-c o" "C-c e" "C-c i")))
+              (unless (keymapp (key-binding (kbd prefix)))
+                (error "Prefix 未注册：%s" prefix)))
+            (unless (= loomacs-font-height 170)
+              (error "字体高度漂移：%S" loomacs-font-height))
+            ;; 兼容迁移不能把真实 Recent/Bookmark 状态改写到已删除的文档。
+            (dolist (migration loomacs-dashboard-org-entry-migrations)
+              (unless (file-exists-p (cdr migration))
+                (error "Dashboard 迁移目标不存在：%S" migration)))
+            (unless (equal (cdr (assq (quote fullscreen) default-frame-alist))
+                           (quote maximized))
+              (error "默认 frame 不是 maximized"))
+            (princ (format "modules=%d theme=%S profile=%S\n"
+                           (length loomacs-loaded-modules)
+                           custom-enabled-themes loomacs-active-profile)))'
+
+printf '%s\n' '[7/8] 空包目录离线降级启动'
+mkdir -p "$TMP_ROOT/empty-elpa"
+XDG_STATE_HOME="$TMP_ROOT/fallback-state" \
+XDG_CACHE_HOME="$TMP_ROOT/fallback-cache" \
+LOOMACS_EMPTY_ELPA="$TMP_ROOT/empty-elpa" \
+"$EMACS" --batch -Q \
+  --eval '(progn
+            (require (quote cl-lib))
+            (require (quote package))
+            (setq user-emacs-directory
+                  (file-name-as-directory (getenv "LOOMACS_ROOT"))
+                  package-user-dir (getenv "LOOMACS_EMPTY_ELPA"))
+            (cl-letf (((symbol-function (quote package-refresh-contents))
+                       (lambda (&rest _) (error "启动禁止刷新包索引")))
+                      ((symbol-function (quote package-install))
+                       (lambda (&rest _) (error "启动禁止安装包"))))
+              (load (expand-file-name "early-init.el" user-emacs-directory)
+                    nil (quote nomessage) t)
+              (load (expand-file-name "init.el" user-emacs-directory)
+                    nil (quote nomessage) t)))
+            (unless (= (length loomacs-loaded-modules) 52)
+              (error "空包环境未加载全部配置单元"))
+            (when custom-enabled-themes
+              (error "空包环境不应启用备用主题：%S" custom-enabled-themes))
+            (dolist (feature (quote (dashboard magit gptel vertico corfu)))
+              (when (featurep feature)
+                (error "空包环境意外加载第三方 feature：%S" feature)))
+            (unless (eq (key-binding (kbd "C-g")) (quote keyboard-quit))
+              (error "空包环境 C-g 漂移"))
+            (when (eq (key-binding (kbd "C-x g")) (quote magit-status))
+              (error "空包环境仍绑定 Magit"))
+            (dolist (binding (quote (("C-c a" . loomacs-org-agenda)
+                                     ("C-c c" . loomacs-org-capture)
+                                     ("C-c l" . org-store-link))))
+              (unless (eq (key-binding (kbd (car binding))) (cdr binding))
+                (error "空包环境 Org 键漂移：%s" (car binding))))
+            (princ "fallback=ok\n"))'
+
+printf '%s\n' '[8/8] 源码目录未接收运行状态或越界生成物'
+for path in history recentf places projects bookmarks custom.el auto-save-list tree-sitter; do
+  if [ -e "$ROOT/$path" ] && ! git ls-files --error-unmatch "$path" >/dev/null 2>&1; then
+    case "$path" in
+      history|recentf|places|auto-save-list)
+        : # 迁移前遗留状态，当前配置不得继续写入。
+        ;;
+      *)
+        printf 'ERROR: 源码目录出现运行产物 %s\n' "$path" >&2
+        exit 1
+        ;;
+    esac
+  fi
+done
+if find modules profiles -type f \( -name '*.el' -o -name '*.elc' \) | grep . >/dev/null; then
+  printf '%s\n' 'ERROR: Org 源码旁出现越界生成物' >&2
+  exit 1
+fi
+
+printf '%s\n' 'OK: Loomacs 检查通过'

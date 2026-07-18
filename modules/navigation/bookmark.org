@@ -1,0 +1,46 @@
+#+title: Loomacs Bookmark
+#+author: SSW
+#+startup: overview
+#+property: header-args:emacs-lisp :comments no :results silent
+
+* 目标
+
+使用 Emacs 内置书签作为可命名、可持久的文件与位置入口。
+
+* 边界
+
+不创建假书签，不把本机路径写进仓库。
+
+* 依赖
+
+Emacs 内置 bookmark.el，保存路径由 =loomacs-state= 设置。
+
+* 配置
+
+#+begin_src emacs-lisp
+;;; loomacs-bookmark.el --- Loomacs 书签 -*- lexical-binding: t; -*-
+
+;; Author: SSW
+;; Maintainer: SSW <https://github.com/auspicious-ssw>
+
+(eval-when-compile (require 'use-package))
+
+(use-package bookmark
+  :ensure nil
+  :commands (bookmark-set bookmark-jump bookmark-bmenu-list))
+
+(provide 'loomacs-bookmark)
+;;; loomacs-bookmark.el ends here
+#+end_src
+
+* 快捷键
+
+保留原生 =C-x r m= 创建、=C-x r b= 跳转和 =C-x r l= 管理书签。
+
+* 验证
+
+创建书签后刷新 Dashboard，重启 Emacs 后再次跳转。
+
+* 回滚
+
+停用模块不删除 XDG =bookmarks= 文件。

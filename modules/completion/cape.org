@@ -1,0 +1,64 @@
+#+title: Loomacs Cape
+#+author: SSW
+#+startup: overview
+#+property: header-args:emacs-lisp :comments no :results silent
+
+* 目标
+
+为代码、正文和 Org 源码块补充文件名、同模式词汇与 Elisp block 的标准 CAPF。
+
+* 边界
+
+只把低成本 CAPF 追加到 buffer-local 列表末尾，不抢占 major mode、Eglot 等更精确的前置补全源。
+
+* 依赖
+
+- 上游：~loomacs-corfu~。
+- 第三方：~cape~。
+
+* 配置
+
+#+begin_src emacs-lisp
+;;; loomacs-cape.el --- Completion At Point 扩展 -*- lexical-binding: t; -*-
+
+(declare-function cape-file "cape")
+(declare-function cape-dabbrev "cape")
+(declare-function cape-elisp-block "cape")
+
+(defun loomacs-cape-setup-defaults ()
+  "为当前 buffer 追加通用 Cape CAPF。"
+  ;; append=t 保证语言模式或 Eglot 的语义补全优先，Cape 只在前置 CAPF 不适用时兜底。
+  (add-hook 'completion-at-point-functions #'cape-file t t)
+  (add-hook 'completion-at-point-functions #'cape-dabbrev t t))
+
+(defun loomacs-cape-setup-org ()
+  "为 Org buffer 增加源码块 Elisp 补全，并保留通用 CAPF。"
+  ;; 源码块 CAPF 必须先于 dabbrev 兜底，否则普通词汇候选会提前结束 CAPF 链。
+  (add-hook 'completion-at-point-functions #'cape-elisp-block nil t)
+  (loomacs-cape-setup-defaults))
+
+(when (package-installed-p 'cape)
+  (add-hook 'prog-mode-hook #'loomacs-cape-setup-defaults)
+  (add-hook 'text-mode-hook #'loomacs-cape-setup-defaults)
+  (add-hook 'org-mode-hook #'loomacs-cape-setup-org))
+
+(use-package cape
+  :if (package-installed-p 'cape)
+  :ensure nil
+  :commands (cape-file cape-dabbrev cape-elisp-block))
+
+(provide 'loomacs-cape)
+;;; loomacs-cape.el ends here
+#+end_src
+
+* 快捷键
+
+不新增快捷键；统一由标准 ~TAB~ / ~M-TAB~ 触发当前 buffer 的 CAPF。
+
+* 验证
+
+代码中语言/Eglot 候选优先；路径片段可补全文件；Org 的 Emacs Lisp 源码块可补全符号。
+
+* 回滚
+
+移除本子模块并重建，buffer 的模式原生 CAPF 和 Eglot CAPF 保持不变。

@@ -1,0 +1,68 @@
+#+title: Loomacs macOS Font
+#+author: SSW
+#+startup: overview
+#+property: header-args:emacs-lisp :comments no :results silent
+
+* 目标
+
+使用 17pt Fira Code 显示英文和代码，并以 PingFang SC 作为中文回退字体。
+
+* 边界
+
+字体缺失时保留 Emacs 默认字体，启动路径不下载或安装字体。
+
+* 依赖
+
+- =loomacs-profile-default= 提供字体家族与 17pt 高度参数。
+- Fira Code（可选但应由 Doctor 验证）。
+- macOS 内置 PingFang SC。
+
+* 配置
+
+#+begin_src emacs-lisp
+;;; loomacs-font.el --- Loomacs macOS 字体 -*- lexical-binding: t; -*-
+
+;; Author: SSW
+;; Maintainer: SSW <https://github.com/auspicious-ssw>
+
+;; 字体参数由 Profile 唯一持有；无初值声明只建立独立编译契约，不覆盖 Profile。
+(defvar loomacs-font-family)
+(defvar loomacs-font-height)
+(defvar loomacs-cjk-font-family)
+
+(defun loomacs-apply-fonts (&optional frame)
+  "为 FRAME 应用 Loomacs 代码字体和中文回退字体。"
+  (let ((target-frame (or frame (selected-frame))))
+    (when (frame-live-p target-frame)
+      (with-selected-frame target-frame
+        (when (find-font (font-spec :family loomacs-font-family))
+          (set-face-attribute 'default target-frame
+                              :family loomacs-font-family
+                              :height loomacs-font-height
+                              :weight 'regular))
+        ;; `t' 只修改默认 fontset，已经创建的 NS frame 不会自动继承。必须同时
+        ;; 更新当前 GUI frame；TTY/batch 没有 fontset，不能调用该 API。
+        (when (display-graphic-p target-frame)
+          (let ((cjk-font (font-spec :family loomacs-cjk-font-family)))
+            (set-fontset-font t 'han cjk-font nil 'prepend)
+            (set-fontset-font nil 'han cjk-font target-frame 'prepend)))))))
+
+(loomacs-apply-fonts)
+(add-hook 'after-make-frame-functions #'loomacs-apply-fonts)
+
+(provide 'loomacs-font)
+;;; loomacs-font.el ends here
+#+end_src
+
+* 快捷键
+
+不定义字体放大或缩小键，保留 Emacs 原生命令。
+
+* 验证
+
+在真实 GUI 中检查 =default= face 为 170，=font-at= 的中文字形家族为 PingFang SC，
+并确认 daemon client 新 frame 同样生效。
+
+* 回滚
+
+停用模块后重启，或对当前 frame 重新设置 =default= face。

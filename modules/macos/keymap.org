@@ -1,0 +1,47 @@
+#+title: Loomacs macOS Keymap
+#+author: SSW
+#+startup: overview
+#+property: header-args:emacs-lisp :comments no :results silent
+
+* 目标
+
+保留 Emacs 核心 Meta 语义，同时让 Command 作为独立 Super 修饰键。
+
+* 边界
+
+不配置 Caps Lock 的系统映射，不抢占 macOS Control 方向键。
+
+* 依赖
+
+macOS NS 端口；其他端口安全跳过。
+
+* 配置
+
+#+begin_src emacs-lisp
+;;; loomacs-keymap.el --- Loomacs macOS 修饰键 -*- lexical-binding: t; -*-
+
+;; Author: SSW
+;; Maintainer: SSW <https://github.com/auspicious-ssw>
+
+(when (boundp 'ns-option-modifier)
+  (setq ns-option-modifier 'meta
+        ns-command-modifier 'super))
+
+(provide 'loomacs-keymap)
+;;; loomacs-keymap.el ends here
+#+end_src
+
+* 快捷键
+
+- Option → Meta。
+- Command → Super。
+- 物理 Caps Lock → Control 是用户的 macOS 习惯，Loomacs 不得修正或覆盖。
+- =C-↑/↓/←/→= 不设置 Emacs 替代键。
+
+* 验证
+
+检查 =M-x= 与 Emacs 核心 Meta 键，并确认四个 Control 方向键没有 Loomacs 自定义绑定。
+
+* 回滚
+
+停用后 NS 端口回到当前 Emacs 构建的默认修饰键映射。

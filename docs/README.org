@@ -1,68 +1,15 @@
-* Emacs 配置文档
+#+title: Loomacs 文档
+#+author: SSW
 
-这里记录当前 Emacs 配置的真实状态、设计边界和后续路线。目标不是一次性搭出完整 IDE，而是建立一套可学习、可解释、可回滚的 macOS + Emacs 主编辑器配置。
+* 索引
 
-** 当前已验证状态
+- [[file:ARCHITECTURE.org][ARCHITECTURE.org]]：源码、Manifest、构建、启动和状态边界。
+- [[file:MODULE-CONTRACT.org][MODULE-CONTRACT.org]]：领域总 Org、子 Org、命名空间和验收规则。
+- [[file:OPERATIONS.org][OPERATIONS.org]]：构建、检查、Doctor、升级、恢复和回滚。
+- [[file:KEYMAPS.org][KEYMAPS.org]]：Emacs 快捷键与 macOS/Chrome/iTerm2 冲突审计。
+- [[file:PACKAGES.org][PACKAGES.org]]：全部内置模块、直接插件、传递依赖和系统工具。
+- [[file:SECURITY.org][SECURITY.org]]：AI 凭据、网络、供应链和文件系统边界。
+- [[file:ROADMAP.org][ROADMAP.org]]：已完成基线与后续方向。
 
-检查日期：2026-07-18。
-
-- Emacs 可执行文件：=/opt/homebrew/bin/emacs=。
-- Emacs 版本： ~GNU Emacs 30.2~ 。
-- 配置根目录：=~/.config/emacs/=。
-- 当前通过 Git 管理，并同步到私有 GitHub 仓库 ~auspicious-ssw/emacs-config~ 。
-- 当前没有 Doom Emacs、Spacemacs 或其他配置发行版。
-- 当前第三方包： ~batppuccin~、~dashboard~、~nerd-icons~、~doom-modeline~、~magit~、~org-modern~、~org-appear~、~sis~ 与 ~transient-posframe~ ，通过 package.el 显式安装。
-- 配置与启动入口：
-  - ~config.org~ ：唯一人工维护的主配置和设计上下文。
-  - ~config.el~ ：由 ~config.org~ Tangle 生成并纳入 Git 的可执行配置。
-  - ~init.el~ ：只负责从本地离线加载 ~config.el~ ，不承载业务配置。
-  - ~early-init.el~ ：继续负责启动早期优化和界面闪烁控制。
-- 当前主题： ~batppuccin-mocha~ 。
-- 当前首页：Dashboard + Nerd Icons，显示带图标的最近文件、~project.el~ 项目和书签。
-- 当前底栏：Doom Modeline，按场景显示文件状态、项目/路径、位置、主模式、Git、诊断和 LSP 等有效信息。
-- 当前 Git 工作台：Magit 按需加载，提供 Status、diff、stage、commit、log、branch、stash 与远端操作；GUI 命令菜单使用 Posframe 居中悬浮，危险操作保持确认。
-- 当前 Org 体验： ~org-modern~ 负责结构视觉， ~org-appear~ 负责光标处恢复隐藏语法；正文保持 17pt 等宽字体，标题使用相对层级，不接管原生按键。
-- 当前输入源策略：SIS 调用本机 ~macism~ ，仅在首次 GUI 启动或新建顶层 GUI frame 时切到 ~com.apple.keylayout.ABC~ ；终端和 child-frame 不切换，之后手动选择中文不会被自动抢回。
-- 当前字体策略：英文/代码使用 17pt ~Fira Code~ ，中文回退 ~PingFang SC~ 。
-- 当前窗口策略：GUI 启动和 daemon 新建 frame 默认使用 macOS 最大化普通窗口，保留菜单栏和 Dock。
-- 当前包管理：使用 Emacs 内置 ~package.el~ 和 ~use-package~ ，包源包含 GNU ELPA、NonGNU ELPA 和 MELPA。
-- 最近文件、项目、书签等运行状态写入 =${XDG_STATE_HOME:-~/.local/state}/emacs/=，缓存写入 =${XDG_CACHE_HOME:-~/.cache}/emacs/=。
-- 配置启动不自动联网；Batppuccin 缺失时回退到内置 ~modus-vivendi-tinted~ 。
-
-** 文档导航
-
-- [[file:ARCHITECTURE.org][ARCHITECTURE.org]]：配置结构、模块职责和目录边界。
-- [[file:ROADMAP.org][ROADMAP.org]]：从安装基线到 GPT 接入的阶段路线。
-- [[file:KEYMAPS.org][KEYMAPS.org]]：当前按键和 macOS 修饰键约定。
-- [[file:DECISIONS.org][DECISIONS.org]]：已经确定的技术选型及原因。
-- [[file:OPERATIONS.org][OPERATIONS.org]]：包安装、代理行为、验证、排障和回滚。
-
-** 当前原则
-
-1. 不使用 Doom Emacs、Spacemacs 这类发行版，先理解原生 Emacs 配置。
-2. 不急于安装大量包，每个包都要有明确职责、显式安装方式、验证方式和回滚方式；当前第三方包只负责主题、首页、图标、信息底栏、Git 工作台、Org 可读性与输入源启动策略。
-3. macOS 体验优先：字体、中文、剪贴板、修饰键和图形窗口要先稳定。
-4. GPT 接入放在基础编辑、搜索、代码能力之后，优先评估 ~gptel~ 。
-5. 配置和运行状态文件必须分开；Git 只保存可复现配置、文档和验证脚本。
-6. 仓库说明与设计文档统一使用 Org；不保留内容重复的 Markdown 副本，避免两套文档漂移。
-7. 配置使用 Literate Org 单一事实源；只人工编辑 ~config.org~ ，并把同步生成的 ~config.el~ 一起纳入审查和版本控制。
-
-** 当前可用检查命令
-
-#+begin_src bash
-emacs --version
-emacs --batch --eval '(princ emacs-version)'
-emacs --batch --eval '(princ user-emacs-directory)'
-#+end_src
-
-执行完整的离线安全检查：
-
-#+begin_src bash
-~/.config/emacs/scripts/check.sh
-#+end_src
-
-检查版本控制状态：
-
-#+begin_src bash
-git status --short --branch
-#+end_src
+单个插件的目标、配置、快捷键、验证和回滚只写在对应 =modules/**/*.org=，不在
+=docs/= 复制第二份说明。=docs/= 只保存跨模块、跨系统的框架级契约。

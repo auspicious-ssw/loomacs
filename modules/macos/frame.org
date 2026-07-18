@@ -1,0 +1,46 @@
+#+title: Loomacs macOS Frame
+#+author: SSW
+#+startup: overview
+#+property: header-args:emacs-lisp :comments no :results silent
+
+* 目标
+
+让初始 GUI frame 与后续 daemon/client frame 都默认最大化，但不进入 macOS 原生全屏。
+
+* 边界
+
+使用 =fullscreen=maximized= 自适应当前屏幕可用区，不写死像素坐标或尺寸。
+
+* 依赖
+
+Emacs frame 内置 API。
+
+* 配置
+
+#+begin_src emacs-lisp
+;;; loomacs-frame.el --- Loomacs macOS Frame -*- lexical-binding: t; -*-
+
+;; Author: SSW
+;; Maintainer: SSW <https://github.com/auspicious-ssw>
+
+(setq frame-resize-pixelwise t
+      window-resize-pixelwise t)
+
+(add-to-list 'initial-frame-alist '(fullscreen . maximized))
+(add-to-list 'default-frame-alist '(fullscreen . maximized))
+
+(provide 'loomacs-frame)
+;;; loomacs-frame.el ends here
+#+end_src
+
+* 快捷键
+
+不重绑 macOS 窗口键；临时还原可使用 =M-x toggle-frame-maximized=。
+
+* 验证
+
+检查独立 GUI 启动和 =emacsclient -c= 的 frame 参数为 =maximized= 且菜单栏、Dock 仍可见。
+
+* 回滚
+
+停用该模块并重启；已存在 frame 不被强制改动。

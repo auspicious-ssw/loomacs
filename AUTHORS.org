@@ -1,0 +1,10 @@
+#+title: Loomacs Authors
+
+* Loomacs
+
+- Author: SSW
+- Maintainer: SSW
+- GitHub: [[https://github.com/auspicious-ssw][@auspicious-ssw]]
+
+这里的作者归属仅覆盖 Loomacs 框架、配置源码、文档和生成逻辑。第三方 Emacs
+插件仍归各自项目及贡献者所有，Loomacs 不复制或重新声明其源代码著作权。

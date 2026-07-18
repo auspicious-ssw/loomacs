@@ -1,0 +1,57 @@
+#+title: Loomacs macOS 总模块
+#+author: SSW
+#+startup: overview
+#+property: header-args:emacs-lisp :comments no :results silent
+
+* 目标
+
+定义 macOS 领域的可移植边界和确定性子模块顺序。
+
+* 边界
+
+只声明顺序；不把 frame、字体、输入源或键位配置重复写在总模块。
+
+* 依赖
+
+- macOS 图形版 Emacs。
+- =loomacs-frame= 、=loomacs-font= 、=loomacs-environment= 、=loomacs-input-source= 和 =loomacs-keymap=。
+
+* 配置
+
+#+begin_src emacs-lisp
+;;; loomacs-macos.el --- Loomacs macOS 领域 -*- lexical-binding: t; -*-
+
+;; Author: SSW
+;; Maintainer: SSW <https://github.com/auspicious-ssw>
+
+(declare-function loomacs-register-packages "loomacs-packages" (&rest packages))
+
+(defconst loomacs-macos-modules
+  '(loomacs-environment
+    loomacs-frame
+    loomacs-font
+    loomacs-input-source
+    loomacs-keymap)
+  "macOS 领域的有序子模块 feature 清单。")
+
+(defconst loomacs-macos-packages
+  '(sis)
+  "macOS 领域直接使用的第三方包。")
+
+(apply #'loomacs-register-packages loomacs-macos-packages)
+
+(provide 'loomacs-macos)
+;;; loomacs-macos.el ends here
+#+end_src
+
+* 快捷键
+
+由 =keymap.org= 负责；本文件不定义键位。
+
+* 验证
+
+在 macOS GUI、daemon client 与 TTY 中分别检查子模块的降级边界。
+
+* 回滚
+
+可在非 macOS Profile 中整体停用；不影响 Core 领域。

@@ -1,0 +1,26 @@
+#+title: Loomacs 依赖锁
+#+author: SSW
+
+* 边界
+
+=packages.el= 记录当前通过验证的包版本、上游 URL 和精确 Git commit，包括直接依赖
+与实际安装的传递依赖。它用于 doctor、升级审查和回滚取证，不会在 Emacs 启动时
+触发下载。
+
+MELPA 是滚动软件源，仅记录版本字符串不能保证旧归档永久可下载，因此 commit 才是
+长期复现依据。第一版 bootstrap 仍通过明确的软件源安装缺包；安装后 doctor 必须核对
+版本和 commit。未来若改为 =package-vc=，也必须继续保持启动与联网安装分离。
+
+* 升级流程
+
+1. 显式刷新包索引，不在启动配置执行。
+2. 一次升级一个直接依赖及必要的传递依赖。
+3. 更新本文件中的版本、commit 和 URL。
+4. 执行 =./scripts/build=、=./scripts/check= 和 GUI 验收。
+5. 验证失败时保留当前 release，不覆盖 last-known-good。
+
+* 回滚
+
+源码回滚和依赖回滚是两个独立动作。=./scripts/rollback= 只切换已发布配置；如果问题
+来自包升级，应按本锁文件的旧 commit 重建对应包目录，不能用删除断言或忽略错误伪装
+兼容。

@@ -1,0 +1,49 @@
+#+title: Loomacs Project
+#+author: SSW
+#+startup: overview
+#+property: header-args:emacs-lisp :comments no :results silent
+
+* 目标
+
+使用 Emacs 内置 project.el 作为 Loomacs 唯一项目发现与切换基础。
+
+* 边界
+
+不引入 Projectile，不在源码中写死项目清单。
+
+* 依赖
+
+Emacs 内置 project.el，状态路径由 =loomacs-state= 预先设置。
+
+* 配置
+
+#+begin_src emacs-lisp
+;;; loomacs-project.el --- Loomacs project.el -*- lexical-binding: t; -*-
+
+;; Author: SSW
+;; Maintainer: SSW <https://github.com/auspicious-ssw>
+
+(eval-when-compile (require 'use-package))
+
+(use-package project
+  :ensure nil
+  :commands (project-current
+             project-find-file
+             project-switch-project
+             project-remember-projects-under))
+
+(provide 'loomacs-project)
+;;; loomacs-project.el ends here
+#+end_src
+
+* 快捷键
+
+保留原生 =C-x p= prefix；= C-x p p= 切换项目，=C-x p f= 查找项目文件。
+
+* 验证
+
+访问 Git 仓库后检查 =project-current= 与 XDG =projects= 状态文件。
+
+* 回滚
+
+停用后 Emacs 内置 project.el 仍存在，只不再由 Loomacs 显式声明。

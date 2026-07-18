@@ -1,0 +1,88 @@
+#+title: Loomacs Doom Modeline
+#+author: SSW
+#+startup: overview
+#+property: header-args:emacs-lisp :comments no :results silent
+
+* 目标
+
+只显示对当前文件、项目、Git、诊断和 LSP 判断有直接价值的信息。
+
+* 边界
+
+不引入 Doom Emacs，不常驻显示时间、电池、邮件、GitHub 或重复编码信息。
+
+* 依赖
+
+第三方 =doom-modeline= 包；=nerd-icons= 可选。
+
+* 配置
+
+#+begin_src emacs-lisp
+;;; loomacs-doom-modeline.el --- Loomacs Doom Modeline -*- lexical-binding: t; -*-
+
+;; Author: SSW
+;; Maintainer: SSW <https://github.com/auspicious-ssw>
+
+(eval-when-compile (require 'use-package))
+
+(use-package doom-modeline
+  :if (package-installed-p 'doom-modeline)
+  :ensure nil
+  :demand t
+  :init
+  (setq doom-modeline-height 32
+        doom-modeline-bar-width 4
+        doom-modeline-hud nil
+        doom-modeline-window-width-limit 80
+        doom-modeline-buffer-file-name-style 'relative-to-project
+        doom-modeline-icon t
+        doom-modeline-major-mode-icon t
+        doom-modeline-major-mode-color-icon t
+        doom-modeline-buffer-state-icon t
+        doom-modeline-buffer-modification-icon t
+        doom-modeline-buffer-name t
+        doom-modeline-highlight-modified-buffer-name t
+        doom-modeline-column-zero-based nil
+        doom-modeline-percent-position '(-3 "%p")
+        doom-modeline-position-column-line-format '("%l:%c")
+        doom-modeline-enable-buffer-position t
+        doom-modeline-selection-info t
+        doom-modeline-project-name t
+        doom-modeline-vcs-icon t
+        doom-modeline-vcs-max-length 24
+        doom-modeline-check-icon t
+        doom-modeline-check 'auto
+        doom-modeline-lsp t
+        doom-modeline-lsp-icon t
+        doom-modeline-remote-host t
+        doom-modeline-env-version t
+        doom-modeline-minor-modes nil
+        doom-modeline-enable-word-count nil
+        doom-modeline-buffer-encoding nil
+        doom-modeline-indent-info nil
+        doom-modeline-total-line-number nil
+        doom-modeline-workspace-name nil
+        doom-modeline-persp-name nil
+        doom-modeline-modal nil
+        doom-modeline-github nil
+        doom-modeline-battery nil
+        doom-modeline-time nil
+        doom-modeline-display-misc-in-all-mode-lines nil)
+  :config
+  (doom-modeline-mode 1))
+
+(provide 'loomacs-doom-modeline)
+;;; loomacs-doom-modeline.el ends here
+#+end_src
+
+* 快捷键
+
+不定义快捷键。
+
+* 验证
+
+实测 Dashboard、普通文件、Git 仓库、诊断与 LSP buffer，同时检查窄窗口自动收缩。
+
+* 回滚
+
+停用模块后保留 Emacs 默认 mode-line。

@@ -1,0 +1,55 @@
+#+title: Loomacs UI 总模块
+#+author: SSW
+#+startup: overview
+#+property: header-args:emacs-lisp :comments no :results silent
+
+* 目标
+
+统一主题、图标、启动首页和信息底栏的视觉语言与降级策略。
+
+* 边界
+
+总模块不绘制自定义首页，不重复成熟插件能力，不维护第二套备用主题。
+
+* 依赖
+
+=loomacs-batppuccin= 、=loomacs-nerd-icons= 、=loomacs-dashboard= 和 =loomacs-doom-modeline=。
+
+* 配置
+
+#+begin_src emacs-lisp
+;;; loomacs-ui.el --- Loomacs UI 领域 -*- lexical-binding: t; -*-
+
+;; Author: SSW
+;; Maintainer: SSW <https://github.com/auspicious-ssw>
+
+(declare-function loomacs-register-packages "loomacs-packages" (&rest packages))
+
+(defconst loomacs-ui-modules
+  '(loomacs-batppuccin
+    loomacs-nerd-icons
+    loomacs-dashboard
+    loomacs-doom-modeline)
+  "UI 领域的有序子模块 feature 清单。")
+
+(defconst loomacs-ui-packages
+  '(batppuccin dashboard doom-modeline nerd-icons)
+  "UI 领域直接使用的第三方包。")
+
+(apply #'loomacs-register-packages loomacs-ui-packages)
+
+(provide 'loomacs-ui)
+;;; loomacs-ui.el ends here
+#+end_src
+
+* 快捷键
+
+全局 UI 不占用键位；Dashboard 的局部键由插件模块负责。
+
+* 验证
+
+分别验证完整包环境和空包离线环境，两者都必须可启动。
+
+* 回滚
+
+可按子模块回滚；主题故障时保留 Emacs 默认外观。

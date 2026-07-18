@@ -1,0 +1,26 @@
+#+title: Loomacs Changelog
+#+author: SSW
+
+* 0.1.0 - Unreleased
+
+** Added
+
+- 建立 =loomacs-= 公共命名空间和模块契约。
+- 建立 Profile、领域总 Org、插件子 Org、确定性 Manifest 和受控生成物结构。
+- 增加构建、诊断、release 与非破坏性回滚边界。
+- 增加补全、Eglot/Flymake/xref/Tree-sitter 和 gptel 配置领域。
+
+** Changed
+
+- 从单体 =config.org → config.el= 迁移为多 Org 源码与显式构建流程。
+- 保留原有 Batppuccin-only、Dashboard、Magit、Org、macOS frame、字体和输入源行为。
+
+** Fixed
+
+- 删除会反向关闭 Eglot Flymake 的重复 minor-mode Hook；真实 Pyright 项目已返回诊断。
+- 同时更新默认与当前 NS frame fontset，使中文字形真实使用 PingFang SC。
+- 从 Dashboard Recent Files 过滤 Loomacs 当前/旧版 XDG state 与 cache 文件。
+
+** Security
+
+- AI 凭据只允许经 =auth-source= 或系统凭据存储读取，禁止进入仓库和生成物。

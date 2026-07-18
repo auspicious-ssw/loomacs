@@ -1,0 +1,76 @@
+#+title: Loomacs macOS Input Source
+#+author: SSW
+#+startup: overview
+#+property: header-args:emacs-lisp :comments no :results silent
+
+* 目标
+
+打开顶层 GUI frame 时默认使用 ABC 英文输入源，之后始终尊重用户手动选择。
+
+* 边界
+
+不启用 SIS respect、context、inline、cursor 或轮询模式；TTY 和 child-frame 绝不切换系统输入源。
+
+* 依赖
+
+- 第三方 =sis= 包。
+- =macism= 可执行文件。
+- =loomacs-environment= 提供显式可执行文件查找。
+
+* 配置
+
+#+begin_src emacs-lisp
+;;; loomacs-input-source.el --- Loomacs macOS 输入源 -*- lexical-binding: t; -*-
+
+;; Author: SSW
+;; Maintainer: SSW <https://github.com/auspicious-ssw>
+
+(eval-when-compile (require 'use-package))
+
+(defconst loomacs-macism-executable
+  (when (fboundp 'loomacs-macos-find-executable)
+    (loomacs-macos-find-executable "macism"))
+  "当前可用的 macism 绝对路径；不可用时为 nil。")
+
+(defun loomacs-select-english-input-source (&optional frame)
+  "当 FRAME 是顶层 GUI frame 时，将 macOS 输入源切到英文。"
+  (let ((target-frame (or frame (selected-frame))))
+    (when (frame-live-p target-frame)
+      (with-selected-frame target-frame
+        ;; 只在工作 frame 创建时执行一次，避免编辑期间抢回英文。
+        (when (and (display-graphic-p)
+                   (not (frame-parent))
+                   (fboundp 'sis-set-english))
+          (sis-set-english))))))
+
+(use-package sis
+  :if (and (eq system-type 'darwin)
+           (package-installed-p 'sis)
+           loomacs-macism-executable)
+  :ensure nil
+  :demand t
+  :config
+  (sis-ism-lazyman-config
+   "com.apple.keylayout.ABC"
+   "com.apple.inputmethod.SCIM.ITABC"
+   'macism)
+  ;; Finder 启动的 GUI 环境可能没有 Homebrew PATH，因此使用已验证绝对路径。
+  (setq sis-external-ism loomacs-macism-executable)
+  (add-hook 'emacs-startup-hook #'loomacs-select-english-input-source)
+  (add-hook 'after-make-frame-functions #'loomacs-select-english-input-source))
+
+(provide 'loomacs-input-source)
+;;; loomacs-input-source.el ends here
+#+end_src
+
+* 快捷键
+
+SIS 不新增全局键位；继续使用 macOS 原输入源切换键。
+
+* 验证
+
+实测独立 GUI、daemon client、TTY 和 Posframe：只有新顶层 GUI frame 切一次 ABC。
+
+* 回滚
+
+停用该模块或删除两个 hook；不会修改 macOS 已配置的输入源列表。

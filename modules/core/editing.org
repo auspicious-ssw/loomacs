@@ -1,0 +1,52 @@
+#+title: Loomacs Editing
+#+author: SSW
+#+startup: overview
+#+property: header-args:emacs-lisp :comments no :results silent
+
+* 目标
+
+建立稳定、低惊扰的通用文本与代码编辑基线。
+
+* 边界
+
+仅启用 Emacs 内置编辑能力；不改变原生导航键，不绑定 Control 方向键。
+
+* 依赖
+
+仅依赖 Emacs 内置功能。
+
+* 配置
+
+#+begin_src emacs-lisp
+;;; loomacs-editing.el --- Loomacs 基础编辑 -*- lexical-binding: t; -*-
+
+;; Author: SSW
+;; Maintainer: SSW <https://github.com/auspicious-ssw>
+
+(delete-selection-mode 1)
+(electric-pair-mode 1)
+(global-auto-revert-mode 1)
+(column-number-mode 1)
+(show-paren-mode 1)
+(add-hook 'prog-mode-hook #'display-line-numbers-mode)
+
+;; 统一使用 UTF-8，确保中文文件、剪贴板与终端内容不漂移。
+(set-language-environment "UTF-8")
+(prefer-coding-system 'utf-8-unix)
+(set-default-coding-systems 'utf-8-unix)
+
+(provide 'loomacs-editing)
+;;; loomacs-editing.el ends here
+#+end_src
+
+* 快捷键
+
+不新增键位；=Control-↑/↓/←/→= 继续由 macOS 使用。
+
+* 验证
+
+检查括号、自动恢复、代码行号、UTF-8 与所有原生核心键位。
+
+* 回滚
+
+停用模块后重启 Emacs，内置模式回到默认状态。

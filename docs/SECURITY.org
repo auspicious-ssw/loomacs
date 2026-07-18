@@ -1,0 +1,51 @@
+#+title: Loomacs 安全边界
+#+author: SSW
+
+* 凭据
+
+- 仓库、Org 源码、generated、日志和测试数据不得包含 API Key、Token、Cookie、
+  私钥或真实生产凭据。
+- gptel 默认使用 =auth-source=；推荐用户自行维护权限受限的 =~/.authinfo.gpg=。
+- Doctor 只判断匹配认证条目是否存在，不打印 login、secret 或认证对象。
+- =auth-source-cache-expiry= 设为 900 秒，减少解密凭据长期驻留内存。
+- 自动化测试不发送真实 AI 请求，不消费额度，也不使用真实生产数据。
+
+* 网络
+
+正常启动、build、check、doctor 和 rollback 均不得联网。允许联网的动作只有：
+
+1. 用户显式刷新 package archive 或安装/升级包。
+2. 用户显式安装 Tree-sitter grammar。
+3. 用户显式调用 gptel 发送当前选择的内容。
+4. 用户主动执行 Git fetch/pull/push 或其他远端操作。
+
+任何模块不得在 =after-init-hook=、打开文件、进入 major mode 或创建 frame 时隐式下载。
+
+* AI 上下文
+
+- 默认 =gptel-track-media=nil=、=gptel-use-tools=nil=。
+- 文件只能通过 =C-c i f= 等显式动作加入上下文。
+- 未选择的 buffer、项目文件、图片和其他媒体不得自动发送。
+- 工具调用默认关闭；即使将来启用，也必须保留逐次确认和权限边界。
+- AI 输出只是建议，不等于代码已编译、测试已通过或事实已验证。
+
+* 包供应链
+
+- =lock/packages.el= 记录直接与传递依赖的版本、Git commit 和上游 URL。
+- 启动不自动升级；升级一次只处理一个直接依赖及必要传递依赖。
+- 安装后 Doctor 在有 metadata 证据时核对版本和 commit。
+- 生成物不包含第三方源码；插件仍安装在 Git 忽略的 =elpa/=。
+
+* 文件系统
+
+- 状态、Release 和日志目录权限为 0700；迁移的状态文件收紧为 0600。
+- autosave 与 backup 可能含未提交内容，只进入 XDG cache。
+- builder 只允许安全相对 source/output 路径，并拒绝 =..=、绝对路径和越界 Tangle。
+- 构建 staging 与目标位于同一文件系统；验证完成前不替换 generated。
+- =profiles/local.org= 被 Git 忽略，但仍不得保存密钥；本地覆盖只用于非敏感设备差异。
+
+* Git 与发布
+
+- 未经作者明确要求，不由自动化提交、推送、创建 PR 或修改 GitHub 仓库设置。
+- Release 回滚只交换 current/previous，不执行 =git reset --hard=。
+- 本仓库未在本轮自动选择或添加开源许可证；许可证属于作者单独决策。

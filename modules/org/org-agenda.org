@@ -1,0 +1,67 @@
+#+title: Loomacs Org Agenda
+#+author: SSW
+#+startup: overview
+#+property: header-args:emacs-lisp :comments no :results silent
+
+* 目标
+
+使用 Org 内置 Agenda 统一查看 =loomacs-org-directory= 内的待办、日程与截止日期。
+
+* 边界
+
+不创建并行任务数据库，不扫描用户未选定的其他目录。
+
+* 依赖
+
+Emacs 内置 org-agenda 与 =loomacs-org-directory=。
+
+* 配置
+
+#+begin_src emacs-lisp
+;;; loomacs-org-agenda.el --- Loomacs Org Agenda -*- lexical-binding: t; -*-
+
+;; Author: SSW
+;; Maintainer: SSW <https://github.com/auspicious-ssw>
+
+(eval-when-compile (require 'use-package))
+
+(defvar loomacs-org-directory)
+(defvar org-agenda-files)
+(defvar org-agenda-window-setup)
+(defvar org-agenda-restore-windows-after-quit)
+
+(defun loomacs-org-agenda ()
+  "在用户主动调用时准备 Org 目录并打开 Agenda。"
+  (interactive)
+  ;; 与 Capture 一样，目录创建属于明确用户动作；普通 Emacs 启动不写 Documents。
+  (make-directory loomacs-org-directory t)
+  (setq org-agenda-files (list loomacs-org-directory))
+  (call-interactively #'org-agenda))
+
+(use-package org-agenda
+  :ensure nil
+  :commands org-agenda
+  :bind (("C-c a" . loomacs-org-agenda))
+  :init
+  ;; Org 原生支持把目录作为 agenda 项；目录不存在时使用空列表，启动不产生文档。
+  (setq org-agenda-files
+        (when (file-directory-p loomacs-org-directory)
+          (list loomacs-org-directory))
+        org-agenda-window-setup 'current-window
+        org-agenda-restore-windows-after-quit t))
+
+(provide 'loomacs-org-agenda)
+;;; loomacs-org-agenda.el ends here
+#+end_src
+
+* 快捷键
+
+=C-c a= 打开 Org Agenda，位于 Emacs 为用户保留的键位空间。
+
+* 验证
+
+在 Org 目录加入带 TODO/日期的文件，执行 =C-c a a= 检查聚合结果和 =q= 窗口恢复。
+
+* 回滚
+
+停用模块只移除 Loomacs Agenda 入口，标准 Org 文件不变。

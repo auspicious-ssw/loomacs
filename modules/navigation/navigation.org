@@ -1,0 +1,48 @@
+#+title: Loomacs Navigation 总模块
+#+author: SSW
+#+startup: overview
+#+property: header-args:emacs-lisp :comments no :results silent
+
+* 目标
+
+用 Emacs 内置能力统一项目、最近文件、书签、命令历史和光标位置。
+
+* 边界
+
+不引入 Projectile 或另一份项目数据库；所有状态路径由 Core State 持有。
+
+* 依赖
+
+=loomacs-project= 、=loomacs-recentf= 、=loomacs-bookmark= 、=loomacs-savehist= 和 =loomacs-saveplace=。
+
+* 配置
+
+#+begin_src emacs-lisp
+;;; loomacs-navigation.el --- Loomacs 导航领域 -*- lexical-binding: t; -*-
+
+;; Author: SSW
+;; Maintainer: SSW <https://github.com/auspicious-ssw>
+
+(defconst loomacs-navigation-modules
+  '(loomacs-project
+    loomacs-recentf
+    loomacs-bookmark
+    loomacs-savehist
+    loomacs-saveplace)
+  "Navigation 领域的有序子模块 feature 清单。")
+
+(provide 'loomacs-navigation)
+;;; loomacs-navigation.el ends here
+#+end_src
+
+* 快捷键
+
+保留 =project.el= 、=bookmark.el= 和历史功能的 Emacs 原生键位。
+
+* 验证
+
+重启后确认最近文件、已知项目、书签、minibuffer 历史与文件位置可持续恢复。
+
+* 回滚
+
+停用单个子模块不删除其 XDG 状态，旧 release 可继续读取。

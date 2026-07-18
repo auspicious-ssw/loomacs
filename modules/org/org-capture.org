@@ -1,0 +1,72 @@
+#+title: Loomacs Org Capture
+#+author: SSW
+#+startup: overview
+#+property: header-args:emacs-lisp :comments no :results silent
+
+* 目标
+
+把临时任务和笔记快速写入用户自有的标准 Org 文件。
+
+* 边界
+
+只在用户主动调用 Capture 时创建 Org 目录；启动不写用户 Documents。
+
+* 依赖
+
+Emacs 内置 org-capture 与 =loomacs-org-directory=。
+
+* 配置
+
+#+begin_src emacs-lisp
+;;; loomacs-org-capture.el --- Loomacs Org Capture -*- lexical-binding: t; -*-
+
+;; Author: SSW
+;; Maintainer: SSW <https://github.com/auspicious-ssw>
+
+(eval-when-compile (require 'use-package))
+
+(defvar loomacs-org-directory)
+
+(defconst loomacs-org-capture-task-file
+  (expand-file-name "tasks.org" loomacs-org-directory)
+  "Loomacs Capture 任务入口文件。")
+
+(defconst loomacs-org-capture-note-file
+  (expand-file-name "notes.org" loomacs-org-directory)
+  "Loomacs Capture 笔记入口文件。")
+
+(defun loomacs-org-capture ()
+  "在用户主动调用时确保 Org 目录存在，然后打开 Capture。"
+  (interactive)
+  ;; 延迟创建目录是明确用户动作，避免仅启动 Emacs 就修改 Documents。
+  (make-directory loomacs-org-directory t)
+  (call-interactively #'org-capture))
+
+(use-package org-capture
+  :ensure nil
+  :commands org-capture
+  :bind (("C-c c" . loomacs-org-capture))
+  :init
+  (setq org-capture-templates
+        `(("t" "Task" entry
+           (file ,loomacs-org-capture-task-file)
+           "* TODO %?\n  %U\n" :empty-lines 1)
+          ("n" "Note" entry
+           (file ,loomacs-org-capture-note-file)
+           "* %?\n  %U\n" :empty-lines 1))))
+
+(provide 'loomacs-org-capture)
+;;; loomacs-org-capture.el ends here
+#+end_src
+
+* 快捷键
+
+=C-c c= 打开 Capture；选 =t= 记任务，选 =n= 记笔记。
+
+* 验证
+
+从 Org 目录不存在的基线开始，启动后确认仍不存在；执行 Capture 后确认只创建目录与选定文件。
+
+* 回滚
+
+停用模块不删除 =tasks.org= 或 =notes.org=，两者仍是普通 Org 文件。

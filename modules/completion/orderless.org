@@ -1,0 +1,47 @@
+#+title: Loomacs Orderless
+#+author: SSW
+#+startup: overview
+#+property: header-args:emacs-lisp :comments no :results silent
+
+* 目标
+
+允许用空格分隔、顺序无关的多个条件过滤候选。
+
+* 边界
+
+只设置标准 completion style；文件路径保留 ~partial-completion~，动态 completion table 保留 ~basic~ 兜底。
+
+* 依赖
+
+- 上游：~loomacs-completion~。
+- 第三方：~orderless~。
+
+* 配置
+
+#+begin_src emacs-lisp
+;;; loomacs-orderless.el --- Orderless 匹配策略 -*- lexical-binding: t; -*-
+
+(use-package orderless
+  :if (package-installed-p 'orderless)
+  :ensure nil
+  :init
+  ;; basic 是动态 completion table 的兼容兜底；文件类别单独保留路径通配与缩写。
+  (setq completion-styles '(orderless basic)
+        completion-category-defaults nil
+        completion-category-overrides '((file (styles partial-completion basic)))))
+
+(provide 'loomacs-orderless)
+;;; loomacs-orderless.el ends here
+#+end_src
+
+* 快捷键
+
+不新增快捷键；在 minibuffer 输入空格即可增加匹配条件。
+
+* 验证
+
+在 ~M-x~ 中输入两个顺序颠倒的命令片段仍能匹配；~C-x C-f~ 可继续使用路径缩写和通配符。
+
+* 回滚
+
+移除本子模块并重建，Emacs 自动恢复内置 completion styles。

@@ -1,0 +1,35 @@
+#+title: Loomacs macOS Profile
+#+author: SSW
+#+property: header-args:emacs-lisp :comments no
+
+* 目标
+
+在 macOS 上启用窗口、字体、输入源和修饰键增量；其他系统加载本文件时保持无副作用。
+
+* 配置
+
+#+begin_src emacs-lisp
+;;; loomacs-profile-macos.el --- Loomacs macOS Profile -*- lexical-binding: t; -*-
+
+;; Author: SSW
+;; Maintainer: SSW <https://github.com/auspicious-ssw>
+;; Generated from profiles/macos.org.  Do not edit directly.
+
+(defvar loomacs-profile)
+(defvar loomacs-enabled-domains)
+
+(when (eq system-type 'darwin)
+  (setq loomacs-profile 'macos)
+  (add-to-list 'loomacs-enabled-domains 'macos))
+
+(provide 'loomacs-profile-macos)
+;;; loomacs-profile-macos.el ends here
+#+end_src
+
+* 验证
+
+macOS 上 =loomacs-profile= 应为 =macos=；batch 与非 macOS 环境不得调用系统输入源。
+
+* 回滚
+
+恢复本文件后重新构建；不删除或改写 macOS 系统设置。

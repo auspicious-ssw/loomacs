@@ -1,0 +1,58 @@
+#+title: Loomacs Batppuccin
+#+author: SSW
+#+startup: overview
+#+property: header-args:emacs-lisp :comments no :results silent
+
+* 目标
+
+将 Batppuccin Mocha 作为 Loomacs 唯一配置主题。
+
+* 边界
+
+缺包或主题加载失败时保留 Emacs 默认外观；不加载 Modus 或任何其他备用主题。
+
+* 依赖
+
+第三方 =batppuccin= 包，缺失时安全降级。
+
+* 配置
+
+#+begin_src emacs-lisp
+;;; loomacs-batppuccin.el --- Loomacs Batppuccin 主题 -*- lexical-binding: t; -*-
+
+;; Author: SSW
+;; Maintainer: SSW <https://github.com/auspicious-ssw>
+
+(defun loomacs-load-preferred-theme ()
+  "加载唯一首选主题；不可用时保留 Emacs 默认外观。"
+  (mapc #'disable-theme custom-enabled-themes)
+  (if (not (package-installed-p 'batppuccin))
+      (message (concat "Batppuccin 未安装；当前保留 Emacs 默认外观。"
+                       "可显式运行 M-x package-install-selected-packages"))
+    (condition-case error-data
+        (progn
+          (require 'batppuccin)
+          (load-theme 'batppuccin-mocha t))
+      (error
+       ;; 主题失败时清理所有可能的半加载 face，不伪装成备用主题成功。
+       (mapc #'disable-theme custom-enabled-themes)
+       (message "Batppuccin 加载失败；当前保留 Emacs 默认外观：%s"
+                (error-message-string error-data))))))
+
+(loomacs-load-preferred-theme)
+
+(provide 'loomacs-batppuccin)
+;;; loomacs-batppuccin.el ends here
+#+end_src
+
+* 快捷键
+
+不绑定主题切换键，避免日常误切换或维护并行主题。
+
+* 验证
+
+分别测试包存在、包缺失以及模拟 =load-theme= 报错；后两者 =custom-enabled-themes= 必须为空。
+
+* 回滚
+
+停用模块或回滚 release；不需要删除用户文件。

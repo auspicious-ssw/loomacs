@@ -1,0 +1,52 @@
+#+title: Loomacs Startup
+#+author: SSW
+#+startup: overview
+#+property: header-args:emacs-lisp :comments no :results silent
+
+* 目标
+
+保持启动界面安静，并建立稳定的基础交互默认值。
+
+* 边界
+
+不负责 early-init 的 GC、frame 创建和 package 时序，也不加载第三方包。
+
+* 依赖
+
+仅依赖 Emacs 内置变量。
+
+* 配置
+
+#+begin_src emacs-lisp
+;;; loomacs-startup.el --- Loomacs 启动默认值 -*- lexical-binding: t; -*-
+
+;; Author: SSW
+;; Maintainer: SSW <https://github.com/auspicious-ssw>
+
+(setq inhibit-startup-screen t
+      initial-scratch-message ""
+      ring-bell-function #'ignore
+      use-short-answers t
+      sentence-end-double-space nil
+      scroll-conservatively 101
+      scroll-margin 3)
+
+(setq-default indent-tabs-mode nil
+              tab-width 4
+              fill-column 100)
+
+(provide 'loomacs-startup)
+;;; loomacs-startup.el ends here
+#+end_src
+
+* 快捷键
+
+不定义快捷键。
+
+* 验证
+
+Batch 加载后检查启动页、缩进、填充列和滚动参数。
+
+* 回滚
+
+停用 =startup= 子模块后 Emacs 回到内置默认交互值。

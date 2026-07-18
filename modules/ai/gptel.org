@@ -1,0 +1,53 @@
+#+title: Loomacs gptel
+#+author: SSW
+#+startup: overview
+#+property: header-args:emacs-lisp :comments no :results silent
+
+* 目标
+
+通过 gptel 在任意 buffer、选区和 Org 对话中提供显式的 AI 问答、改写与上下文工作流。
+
+* 边界
+
+只注册延迟加载命令和安全默认值；后端、模型、认证和每次发送内容由用户在 gptel 菜单选择。不开启媒体跟踪或工具调用。
+
+* 依赖
+
+- 上游：~loomacs-auth-source~。
+- 第三方：~gptel~。
+- 可选外部命令：~curl~；缺失时 gptel 使用 Emacs URL 后端。
+
+* 配置
+
+#+begin_src emacs-lisp
+;;; loomacs-gptel.el --- gptel buffer 工作流 -*- lexical-binding: t; -*-
+
+(use-package gptel
+  :if (package-installed-p 'gptel)
+  :ensure nil
+  :commands (gptel gptel-send gptel-menu gptel-rewrite gptel-add gptel-add-file)
+  :init
+  ;; 不设置 gptel-model/gptel-backend：可用模型会变化，应由已安装 gptel 与用户
+  ;; 在发送前的菜单共同决定。默认 key resolver 继续使用 auth-source。
+  (setq gptel-default-mode 'org-mode
+        gptel-stream t
+        gptel-use-curl (and (executable-find "curl") t)
+        gptel-track-media nil
+        gptel-use-tools nil
+        gptel-confirm-tool-calls t))
+
+(provide 'loomacs-gptel)
+;;; loomacs-gptel.el ends here
+#+end_src
+
+* 快捷键
+
+使用领域总入口 ~C-c i~；gptel 对话 buffer 内仍可用插件标准 ~C-c RET~ 发送。~C-g~ 保持取消当前命令。
+
+* 验证
+
+只检查命令可调用、默认对话模式为 Org、媒体/工具默认关闭和凭据未进入日志；不在自动化中发送真实 API 请求或消费额度。
+
+* 回滚
+
+移除本子模块并重建，~C-c i~ 不再注册；对话 Org 文件仍是普通文本，可独立保存或删除。

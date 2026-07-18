@@ -1,0 +1,79 @@
+#+title: Loomacs Consult
+#+author: SSW
+#+startup: overview
+#+property: header-args:emacs-lisp :comments no :results silent
+
+* 目标
+
+提供 buffer、行、符号、项目文本和历史的统一搜索入口，并支持受控预览。
+
+* 边界
+
+不 remap Emacs 原生命令；所有新增入口位于用户保留的 ~C-c s~ 前缀。Ripgrep 只在用户显式调用时启动。
+
+* 依赖
+
+- 上游：~loomacs-vertico~、~loomacs-orderless~。
+- 第三方：~consult~。
+- 可选外部命令：~rg~（仅 ~consult-ripgrep~ 使用）。
+
+* 配置
+
+#+begin_src emacs-lisp
+;;; loomacs-consult.el --- Consult 搜索入口 -*- lexical-binding: t; -*-
+
+;; keymap 在 Consult 首次加载前存在；显式声明公共命令可保持延迟加载并让每个
+;; 生成模块在第三方 feature 未预载时仍可独立严格编译。
+(declare-function consult-buffer "consult")
+(declare-function consult-find "consult")
+(declare-function consult-ripgrep "consult")
+(declare-function consult-history "consult")
+(declare-function consult-imenu "consult")
+(declare-function consult-line "consult")
+(declare-function consult-mark "consult")
+(declare-function consult-outline "consult")
+(declare-function consult-yank-pop "consult")
+
+(defvar-keymap loomacs-consult-map
+  :doc "Loomacs 搜索命令。"
+  "b" #'consult-buffer
+  "f" #'consult-find
+  "g" #'consult-ripgrep
+  "h" #'consult-history
+  "i" #'consult-imenu
+  "l" #'consult-line
+  "m" #'consult-mark
+  "o" #'consult-outline
+  "y" #'consult-yank-pop)
+
+(when (package-installed-p 'consult)
+  (keymap-global-set "C-c s" loomacs-consult-map))
+
+(use-package consult
+  :if (package-installed-p 'consult)
+  :ensure nil
+  :commands (consult-buffer consult-find consult-ripgrep consult-history
+                            consult-imenu consult-line consult-mark consult-outline
+                            consult-yank-pop))
+
+(provide 'loomacs-consult)
+;;; loomacs-consult.el ends here
+#+end_src
+
+* 快捷键
+
+| 按键 | 功能 |
+|---+---|
+| ~C-c s b~ | buffer、最近文件与书签 |
+| ~C-c s l~ | 当前 buffer 搜索 |
+| ~C-c s g~ | 当前项目 Ripgrep |
+| ~C-c s i~ | 当前文件符号 |
+| ~C-c s o~ | 大纲标题 |
+
+* 验证
+
+上述入口均在首次调用时加载 Consult；~M-x~、~C-x C-f~ 等原生绑定不变；缺少 ~rg~ 时只有 Ripgrep 命令报告错误。
+
+* 回滚
+
+移除本子模块并重建，~C-c s~ 前缀消失，原生命令不受影响。

@@ -1,0 +1,46 @@
+#+title: Loomacs Embark Consult
+#+author: SSW
+#+startup: overview
+#+property: header-args:emacs-lisp :comments no :results silent
+
+* 目标
+
+使用官方集成包连接 Embark 的导出/对象动作与 Consult 的候选、预览和异步搜索。
+
+* 边界
+
+只负责两个上游包之间的适配，不定义新的全局按键，不复制 Consult 或 Embark 的实现。
+
+* 依赖
+
+- 上游：~loomacs-consult~、~loomacs-embark~。
+- 第三方：~embark-consult~。
+
+* 配置
+
+#+begin_src emacs-lisp
+;;; loomacs-embark-consult.el --- Embark 与 Consult 集成 -*- lexical-binding: t; -*-
+
+(declare-function consult-preview-at-point-mode "consult")
+
+(use-package embark-consult
+  :if (package-installed-p 'embark-consult)
+  :ensure nil
+  :after (embark consult)
+  :hook (embark-collect-mode . consult-preview-at-point-mode))
+
+(provide 'loomacs-embark-consult)
+;;; loomacs-embark-consult.el ends here
+#+end_src
+
+* 快捷键
+
+不新增快捷键；沿用 ~C-c o~ 对 Consult 候选执行、收集或导出动作。
+
+* 验证
+
+在 ~consult-line~ 或 ~consult-ripgrep~ 中使用 Embark 导出，结果 buffer 可按 point 预览且不会提前执行候选动作。
+
+* 回滚
+
+移除本子模块并重建；Consult 和 Embark 仍可独立工作，只失去二者的增强集成。
