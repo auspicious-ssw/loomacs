@@ -1,0 +1,206 @@
+* 运维与排障
+
+** 启动契约
+
+正常启动必须满足：
+
+1. 不因网络不可用而失败。
+2. Batppuccin 已安装时加载 ~batppuccin-mocha~ 。
+3. Batppuccin 缺失或加载失败时回退到内置 ~modus-vivendi-tinted~ 。
+4. Dashboard 已安装时显示启动首页；缺失时不影响启动。
+5. Nerd Icons 与 Symbols Nerd Font 可用时显示图标；插件缺失时退化为文字列表，字体缺失时由检查阻止交付。
+6. GUI frame 默认最大化到当前显示器可用工作区，保留菜单栏和 Dock。
+7. 默认字体为 17pt Fira Code，中文使用 PingFang SC 回退。
+8. 无论主配置是否成功，启动阶段临时提高的 GC 参数都应恢复。
+9. 配置源码目录不继续产生 history、recentf、places 或 autosave 状态。
+10. Dashboard 使用紫色整项高亮显示唯一键盘焦点；鼠标停留不产生第二个持续高亮。
+11. Doom Modeline 已安装时显示场景化信息底栏；缺失时安全保留 Emacs 默认 mode-line。
+12. Magit 已安装时只注册 autoload 与显式键位，普通启动不加载完整 Magit；缺失时不影响编辑器启动。
+13. GUI 中 Transient 命令菜单使用居中悬浮 child-frame；TTY、batch 或插件缺失时自动回退原生底部菜单。
+14. 首次 GUI 启动与每个新顶层 GUI frame 默认切换到 ABC 英文；child-frame 和 TTY 不改变系统输入源，启动后手动中文选择不被持续覆盖。
+15. Org 文件按需启用 ~org-modern~ 与 ~org-appear~ ；缺包时保留可编辑的原生 Org，不影响普通启动。
+16. ~init.el~ 只从仓库本地离线加载受 Git 跟踪的 ~config.el~ ；启动不自动 Tangle，也不依赖网络或第三方 Org 外观包。
+17. 人工维护的 ~config.org~ 与生成的 ~config.el~ 必须保持一致；是否满足以当前回归检查输出为准。
+
+** 包安装与代理
+
+启动过程不会自动联网。需要安装声明的第三方包时，显式执行：
+
+#+begin_example
+M-x package-install-selected-packages
+#+end_example
+
+macOS 图标字体通过 Homebrew 显式安装：
+
+#+begin_src bash
+brew install --cask font-symbols-only-nerd-font
+#+end_src
+
+SIS 的 macOS 输入源后端通过 Homebrew 独立安装：
+
+#+begin_src bash
+brew install laishulu/homebrew/macism
+#+end_src
+
+~package-refresh-contents~ 会访问以下三个独立来源：
+
+- GNU ELPA： ~https://elpa.gnu.org/packages/~
+- NonGNU ELPA： ~https://elpa.nongnu.org/nongnu/~
+- MELPA： ~https://melpa.org/packages/~
+
+因此代理面板同时或连续显示多条连接属于预期行为。若安装失败，先确认代理的 TUN/系统代理或 GUI 环境变量是否覆盖 Emacs，再重试显式安装；不要把代理地址、账号或令牌提交到配置仓库。
+
+MELPA 是滚动软件源：本机旧索引偶尔会指向已经被替换的快照。若安装明确返回某个 MELPA 包 ~Not found~ ，可以只保留 MELPA 源后显式刷新一次该索引，再重试安装；不要把刷新放进启动配置。一个主包还会分别下载它的依赖，因此代理里出现数条目标同为软件源的 HTTPS 连接并不表示 Emacs 启动在循环联网。
+
+** 配置编辑与生成
+
+~config.org~ 是唯一人工维护入口， ~config.el~ 是纳入 Git 的 Tangle 产物。编辑配置时按以下顺序操作：
+
+1. 在 Emacs 中打开并修改 ~config.org~ ，不要直接编辑 ~config.el~ 。
+2. 在仓库根目录使用内置 Org 重新生成：
+
+#+begin_src bash
+emacs --batch -Q --eval "(progn (require 'org) (require 'ob-tangle) (org-babel-tangle-file \"config.org\" \"config.el\" \"emacs-lisp\"))"
+#+end_src
+
+3. [@3] 执行回归检查，并审查主配置与生成物的实际差异：
+
+#+begin_src bash
+./scripts/check.sh
+git diff --check
+git diff -- config.org config.el init.el early-init.el
+#+end_src
+
+使用 ~-Q~ 的目的是让生成过程不加载正在修改的用户配置；Tangle 只需要 Emacs 自带 Org，不安装包、不刷新索引，也不修改本机运行状态。只有当前命令真实通过后，才能把一致性或启动结果记录为已验证。
+
+新机器克隆后无需先生成：仓库跟踪 ~config.el~ ，最小 ~init.el~ 可以直接离线加载它。只有修改 ~config.org~ 时才需要重新 Tangle。
+
+** 本地验证
+
+#+begin_src bash
+./scripts/check.sh
+#+end_src
+
+验证脚本只使用临时状态与缓存目录，不刷新包索引、不安装包，也不修改真实的 history、recentf 或 places。检查目标还包括从 ~config.org~ 重新 Tangle 后与已跟踪 ~config.el~ 一致，以及 ~init.el~ 不承载主配置或启动联网逻辑；实际检查项和通过状态以脚本当次输出为准。
+
+** Org 阅读与编辑
+
+打开任意 ~.org~ 文件后， ~org-modern~ 会显示现代标题、列表、表格、标签与源码块； ~org-appear~ 会在光标进入强调文本或描述链接时恢复其原始标记，离开后回到简洁阅读视图。 ~TAB~ 仍折叠当前节点， ~C-c C-c~ 仍执行当前 Org 元素的上下文动作，没有增加新的 Org 全局快捷键。
+
+如果只看到原生 Org，先执行 ~M-x package-install-selected-packages~ 并重新打开文件；再用 ~M-x org-modern-mode~ 与 ~M-x org-appear-mode~ 检查两个 buffer-local 模式。外观包缺失只影响排版，不应修改文档内容或阻断启动。
+
+** Magit 日常工作流
+
+| 位置 | 按键 | 作用 |
+|---+---+---+|
+| 任意 buffer | ~C-x g~ | 打开当前仓库的 Magit Status |
+| 任意 buffer | ~C-c g~ | 打开 Magit 总菜单 |
+| 文件 buffer | ~C-c f~ | 打开当前文件的 log、diff、blame 等菜单 |
+| ~project.el~ | ~C-x p m~ | 打开当前项目的 Magit Status |
+| Magit Status | ~TAB~ | 展开或折叠当前 section |
+| Magit Status | ~s~ / ~u~ | 暂存／取消暂存当前文件、hunk 或选区 |
+| Magit Status | ~c c~ | 创建提交；提交信息 buffer 中用 ~C-c C-c~ 确认 |
+| Magit Status | ~g~ | 刷新 Git 状态 |
+| Magit Status | ~q~ | 退出并恢复之前的窗口布局 |
+
+第一次使用先完成 ~Status → 查看 diff → stage → commit~ 。 ~P~、~r~、~X~ 等远端、rebase 或 reset 菜单只在理解目标分支和影响后使用；当前配置不会自动执行，也不会绕过危险操作确认。
+
+图形 Emacs 会把上表中的 Magit 总菜单、当前文件菜单，以及 Status 内的 ~c~、~P~、~b~ 等 Transient 子菜单显示为居中悬浮卡片。按 ~C-g~ 关闭悬浮菜单，不会关闭 Status。终端 Emacs 显示底部菜单属于预期降级，不是插件故障。
+
+** 输入源行为
+
+- 从 Finder、Dock 或命令行首次打开图形 Emacs：切到 ABC 英文。
+- daemon 创建新的顶层 GUI client：该 frame 创建时切到 ABC 英文。
+- Magit 悬浮菜单等 child-frame：不再次切换输入源。
+- 进入 Emacs 后手动切到中文：配置不再干预，可持续中文输入。
+- TTY、batch 或远程终端：不调用 macOS 输入源切换。
+
+只读检查当前系统输入源：
+
+#+begin_src bash
+macism
+#+end_src
+
+在 Emacs 中可执行 ~M-x sis-get~ 查看 SIS 识别的当前输入源，或用 ~M-x sis-set-english~ 手动回到英文。正常启动不启用 SIS 的上下文跟随和自动刷新模式。
+
+** 自动化边界
+
+当前暂不启用 GitHub Actions。现阶段配置规模很小，关键验收还包括 macOS 图形窗口、Fira Code 与中文字体，干净 CI 为安装主题而联网反而会削弱离线启动检查。 ~scripts/check.sh~ 是当前规范验证入口；当配置拆出 ~lisp/~ 模块、增加 ERT 测试或需要多机兼容时再引入 CI。
+
+** 常见故障
+
+*** 主题包缺失
+
+表现：界面使用 ~modus-vivendi-tinted~ ， ~*Messages*~ 提示 Batppuccin 未安装。
+
+处理：网络稳定后运行 ~M-x package-install-selected-packages~ ，然后重启 Emacs 或执行 ~M-x load-theme~ 。
+
+*** Dashboard 未显示
+
+先执行 ~M-x package-install-selected-packages~ ，确认 ~dashboard~ 已安装，再重启 Emacs。若使用 daemon，新的 ~emacsclient -c~ frame 会通过 ~initial-buffer-choice~ 打开 Dashboard；已有 frame 可执行 ~M-x dashboard-open~ 。
+
+*** Dashboard 显示 ~No items~
+
+这不是下载失败。Dashboard 的三个区域分别读取 Emacs 最近文件、~project.el~ 已知项目和书签；初次使用时三者都可能为空。插件安装在 =~/.config/emacs/elpa/=，不会出现在 =~/Downloads=。
+
+当前机器首次初始化使用真实本机数据：Emacs 配置及常用文档进入 Recent Files，现有 Git 项目进入 Projects，并为对应入口创建 Bookmarks。这些内容保存在 XDG state，不提交到 Git，也不会在其他机器上伪造相同路径。后续打开文件、访问项目或创建书签时，Dashboard 会继续自动更新。
+
+*** Dashboard 按 ~r~、~p~ 或 ~m~ 看起来没有反应
+
+这三个按键是在对应区域内循环移动焦点，不会立即打开条目： ~r~ 对应 Recent Files， ~p~ 对应 Projects， ~m~ 对应 Bookmarks；大写 ~R~、~P~、~M~ 反向移动。紫色整项高亮表示当前焦点，按 ~RET~ 才会打开条目。
+
+如果整项高亮没有移动，先确认当前 buffer 名称是 ~*dashboard*~ ，再按 ~g~ 刷新。仍异常时执行 ~M-x dashboard-open~ 重新生成 Dashboard，并运行 ~./scripts/check.sh~ 验证动态快捷键与选择 overlay。
+
+*** 临时取消最大化
+
+执行 ~M-x toggle-frame-maximized~ ，或使用 macOS 窗口标题栏。下次新建 GUI frame 仍按默认策略最大化。
+
+*** Dashboard 图标显示为方框
+
+确认 ~nerd-icons~ 已安装，并执行 ~brew list --cask font-symbols-only-nerd-font~ 检查字体。字体刚安装时需要完全退出并重启 Emacs，让 macOS 图形进程重新读取字体列表。图标失败只影响视觉，不应阻断 Dashboard 或普通编辑。
+
+*** 底栏仍是 Emacs 默认样式
+
+执行 ~M-x package-install-selected-packages~ ，确认 ~doom-modeline~ 及其依赖已安装，再完全重启 Emacs。 ~M-x doom-modeline-mode~ 可以临时切换状态；正常配置下该全局 minor mode 应为启用状态。
+
+底栏刻意不常驻显示编码、时间、电池和次要模式。如果 Git、诊断或 LSP 信息未出现，先确认当前文件确实处于对应项目或功能状态；不要把“当前无状态”误判为插件失效。
+
+*** ~C-x g~ 没有打开 Magit
+
+先执行 ~M-x package-install-selected-packages~ ，再完全重启 Emacs。用 ~C-h k C-x g~ 检查绑定应为 ~magit-status~ ；若包存在但仍异常，运行 ~./scripts/check.sh~ 。
+
+如果提示当前目录不是 Git 仓库，进入项目文件后重试，或从 ~M-x magit-list-repositories~ 选择配置扫描到的仓库。当前扫描范围是 =~/Projects/= 两层和 =~/.config/= 一层。
+
+*** Magit 窗口太乱或 diff 看不清
+
+Status 默认复用当前窗口，diff/process 才弹到另一窗口；在 Magit 中按 ~q~ 会恢复进入前布局。当前 hunk 会显示词级差异，Batppuccin 原生负责红绿 diff、branch、section 和 process face，不需要另装主题扩展。
+
+*** Magit 菜单没有悬浮
+
+先确认当前是 GUI Emacs，再执行 ~M-x package-install-selected-packages~ 并完全重启。在图形 frame 中执行 ~M-: (posframe-workable-p) RET~ 应返回非空值；终端、batch 或仅 minibuffer frame 会按设计使用原生底部菜单。
+
+悬浮卡片只用于命令菜单： ~C-x g~ 打开的 Status 仍占用普通窗口。按 ~C-c g~ 才能直接查看悬浮效果；按 ~C-g~ 应立即关闭且不残留子窗口。若异常，运行 ~./scripts/check.sh~ 检查延迟加载、GUI/TTY 动态切换和缺包降级。
+
+*** Emacs 打开后不是英文输入源
+
+先在终端运行 ~macism~ ，确认命令存在并能返回输入源 ID；ABC 应为 ~com.apple.keylayout.ABC~ 。再确认 ~sis~ 已通过 ~M-x package-install-selected-packages~ 安装，并完全退出后重新打开图形 Emacs。
+
+若 ~M-x sis-set-english~ 仍不能切换，检查 macOS 是否要求为 Emacs 或 macism 相关进程授予辅助功能权限。配置不会在失败时循环调用，也不会影响 TTY 启动；修复权限后重试即可。
+
+*** 配置加载错误
+
+先执行：
+
+#+begin_src bash
+./scripts/check.sh
+#+end_src
+
+如果错误来自最新提交，优先使用 ~git revert <commit>~ 生成可追踪的反向提交，不使用会丢失未提交内容的破坏性 Git 命令。
+
+如果错误来自 ~config.org~ 与 ~config.el~ 漂移，先保留未提交工作，再从仓库根目录重新执行“配置编辑与生成”中的 Tangle 命令。不要直接在 ~config.el~ 中补丁式修复；这会在下次生成时丢失，并形成两个事实源。
+
+需要回滚 Literate 配置变更时，把 ~config.org~ 与 ~config.el~ 作为同一变更单元执行 ~git revert~ 。 ~init.el~ 与 ~early-init.el~ 只有在对应入口或早期职责确实改变时才随同回滚；不要用 ~git reset --hard~ 覆盖未提交内容。
+
+*** 运行状态异常
+
+状态文件位于 =${XDG_STATE_HOME:-~/.local/state}/emacs/=，缓存位于 =${XDG_CACHE_HOME:-~/.cache}/emacs/=。清理缓存不会删除 Customize、history、recentf 和 places；清理 state 会丢失这些本机状态，应先备份。

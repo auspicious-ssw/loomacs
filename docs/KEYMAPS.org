@@ -1,0 +1,149 @@
+* 快捷键说明
+
+当前配置还没有大规模自定义快捷键。本文件先记录 macOS 修饰键约定和 Emacs 必须熟悉的基础入口。
+
+** macOS 修饰键
+
+当前配置由 ~config.org~ 生成到 ~config.el~ ，再由最小 ~init.el~ 离线加载。以下设置位于主配置的“字体、编码与通用编辑”章节：
+
+#+begin_src elisp
+(setq ns-option-modifier 'meta
+      ns-command-modifier 'super)
+#+end_src
+
+含义：
+
+| 物理按键 | Emacs 识别为 | 用途 |
+|---+---+---+|
+| ~Option~ | ~Meta~ | Emacs 核心快捷键，例如 ~M-x~ |
+| ~Command~ | ~Super~ | 后续可用于 macOS 图形环境专用快捷键 |
+
+** 必须先熟悉的 Emacs 默认快捷键
+
+| 按键 | 作用 |
+|---+---+|
+| ~C-g~ | 取消当前命令或退出卡住的 minibuffer |
+| ~M-x~ | 执行命令 |
+| ~C-x C-f~ | 打开文件 |
+| ~C-x C-s~ | 保存文件 |
+| ~C-x C-c~ | 退出 Emacs |
+| ~C-x b~ | 切换 buffer |
+| ~C-x k~ | 关闭当前 buffer |
+| ~C-h k~ | 查看某个按键绑定了什么命令 |
+| ~C-h v~ | 查看变量 |
+| ~C-h f~ | 查看函数 |
+| ~C-h m~ | 查看当前 major mode 和 minor mode 帮助 |
+
+说明：
+
+- ~C-~ 表示 Control。
+- ~M-~ 表示 Meta；在当前 macOS 配置中按 ~Option~ 。
+- ~S-~ 表示 Shift。
+- ~s-~ 表示 Super；在当前 macOS 配置中按 ~Command~ 。
+
+** Dashboard buffer 快捷键
+
+这些按键只在 Dashboard 首页中生效，来自插件默认契约：
+
+| 按键 | 作用 |
+|---+---+|
+| ~r~ | 跳到最近文件区域，并循环选择 |
+| ~p~ | 跳到项目区域，并循环选择 |
+| ~m~ | 跳到书签区域，并循环选择 |
+| ~g~ | 刷新 Dashboard |
+| ~TAB~ / ~S-TAB~ | 移动到下一个／上一个条目 |
+| ~RET~ | 打开当前条目 |
+
+交互说明：
+
+- ~r~、~p~、~m~ 是在对应区域中循环移动焦点，不是立即打开区域；大写字母反向移动。
+- 当前条目使用紫色背景整项高亮，按 ~RET~ 才会打开。
+- 鼠标悬停仍显示手型指针并可点击，但不产生第二个持续高亮。
+
+** 填充 Dashboard 数据
+
+Dashboard 不维护另一份内容，它直接读取 Emacs 的真实使用状态：
+
+| 按键／操作 | 结果 |
+|---+---+|
+| ~C-x C-f~ 打开文件 | 文件会逐步进入 Recent Files |
+| ~C-x p p~ | 使用 ~project.el~ 选择或访问项目 |
+| ~C-x r m~ | 为当前位置创建书签 |
+| ~C-x r b~ | 跳转到已有书签 |
+| ~C-x r l~ | 列出并管理书签 |
+| Dashboard 中按 ~g~ | 立即刷新三个区域 |
+
+** 当前全局自定义快捷键
+
+| 按键 | 作用 |
+|---+---+|
+| ~C-x g~ | 打开当前仓库的 Magit Status |
+| ~C-c g~ | 打开 Magit 全局命令菜单；GUI 中居中悬浮 |
+| ~C-c f~ | 打开当前文件的 Git 操作菜单；GUI 中居中悬浮 |
+| ~C-x p m~ | 打开当前 ~project.el~ 项目的 Magit Status |
+
+~C-c g~ 和 ~C-c f~ 位于 Emacs 专门保留给用户配置的 ~C-c <字母>~ 空间；配置在 ~package-initialize~ 前关闭 Magit 的隐式默认绑定，再显式注册上述键位，避免文档与实际 keymap 漂移。
+
+** 输入源与快捷键边界
+
+SIS 当前不增加任何全局快捷键，也不重写 Emacs prefix。它只在顶层 GUI frame 创建时调用一次 ~macism~ 切到 ABC 英文，Posframe 等 child-frame 不触发；之后仍使用 macOS 原有输入法切换键。因此输入源功能不会抢占 ~C-x~、~C-c~、~M-x~ 等 Emacs 按键序列。
+
+** 本机系统级冲突审计
+
+检查日期：2026-07-18。这里记录的是当前 Mac 的只读快照，不代表仓库克隆到其他机器后的固定状态。Emacs 能保证自身 keymap 的优先级，但系统级 global hotkey 会在按键送达 Emacs 之前拦截，必须到对应应用或 macOS 设置中改键，不能靠再次绑定 Elisp 覆盖。
+
+*** 已处理的外部占用
+
+| Emacs 逻辑按键 | Emacs 语义 | 外部占用方 | 处理状态 |
+|---+---+---+---+|
+| ~C-SPC~ | ~set-mark-command~ | macOS 输入源 | Apple Symbolic HotKey 60 已停用，原参数保留，可回滚 |
+| ~C-M-SPC~ | ~mark-sexp~ | macOS 输入源 | Apple Symbolic HotKey 61 已停用，原参数保留，可回滚 |
+| ~C-g~ | ~keyboard-quit~ ；Transient 中关闭菜单 | Chrome Gemini / Glic | 启动键从 ~Control-G~ 迁移到 ~Control-Shift-Command-G~ ；导航键为 ~Control-Shift-Command-N~ |
+| ~M-SPC~ | ~cycle-spacing~ | iTerm2 | system-wide Hotkey 从 ~Option-Space~ 迁移到 ~Control-Shift-Command-T~ |
+
+macOS 的两项输入源冲突已经解除。Chrome 150 的当前设置页只公开“启动”和“导航”两个快捷键，页面与 ~Local State~ 已回读上述值；当前版本没有第三个“选择模式”输入框，因此不臆造或直接写入不存在的设置。实测启动键能显示／隐藏 Gemini 悬浮窗且不抢走 Emacs 焦点，导航键能把焦点交给 Chrome。iTerm2 的设置页已回读 ~Control-Shift-Command-T~ ，并实测该组合可在 Finder 与 iTerm2 间连续显示／隐藏窗口。相关入口见 [[https://support.google.com/chrome/answer/16283624][Chrome Gemini 快捷键说明]]、[[https://iterm2.com/documentation-hotkey.html][iTerm2 system-wide hotkey 说明]] 与 [[https://support.apple.com/zh-cn/guide/mac-help/mchlp2262/mac][macOS 快捷键停用方法]]。
+
+*** 明确保留给 macOS 的方向键
+
+~Control-↑~、~Control-↓~、~Control-←~、~Control-→~ 继续由 macOS 的调度中心、App Exposé 与空间切换使用。用户不需要 Emacs 对应的段落／单词方向键语义，因此：
+
+- 不停用 macOS 的这些系统快捷键。
+- 不在 Emacs 中新增替代绑定。
+- 不把这四个方向键组合列入 Emacs 核心快捷键保护清单。
+
+*** 条件性冲突
+
+Dashboard 的 ~r/p/m~、Magit 的 ~g/s/u/c~ 和 Transient 中的单字母命令，都要求按键先到达 Emacs。如果当前手动切到了中文输入源，macOS 输入法可能先接收裸字母。当前只保证新 GUI frame 默认英文，尚未在进入 Dashboard、Magit 或 Transient 时强制切回英文；是否增加这种“只在命令界面切英文”的策略，需在保留正文中文输入习惯的前提下单独决定。
+
+键盘顶行当前保留 macOS 亮度、调度中心和媒体键行为；裸按 F1–F4、F10、F11 不保证送到 Emacs，需要配合 Fn。系统还保留 Control-F2 至 Control-F7 一组键盘导航组合，但当前 Emacs 配置没有为它们定义核心工作流，因此属于使用边界而非现有命令冲突。
+
+*** 已验证无当前冲突
+
+- Caps Lock → Control 是明确的个人习惯，保持不变；下文所有 ~C-~ 都指这个逻辑 Control。
+- ~C-x g~、~C-c g~、~C-c f~、~C-x p m~、~M-x~ 在 Emacs 内部解析正确且无重复自定义绑定。
+- Spotlight 的 ~Command-Space~ 当前已关闭。
+- ChatGPT/Codex 当前监听“双击 Command”，不占用单个 Emacs chord。
+- Chrome Gemini 当前公开的启动与导航功能已迁移到带 Command 的 ~Control-Shift-Command-G/N~ ，不再占用 Emacs 的 ~C-g~ 语义。
+- iTerm2 的全局显示／隐藏已迁移到 ~Control-Shift-Command-T~ ，不再占用 Emacs 的 ~M-SPC~ 。
+- 独立 GUI Emacs 实测： ~C-g~ 调用 ~keyboard-quit~ ； ~C-SPC~ 激活 mark； ~C-M-SPC~ 选中完整 sexp； ~M-SPC~ 把连续空格收缩为一个，四项执行时焦点均留在 Emacs。
+- 当前未检测到 Raycast、Alfred、Karabiner、BetterTouchTool、Rectangle、Hammerspoon 或 ~skhd~ 这类额外全局快捷键管理器。
+- ~NSUserKeyEquivalents~ 当前没有自定义 App 菜单快捷键。
+
+~scripts/check.sh~ 会持续断言 Emacs 核心命令和本仓库自定义键位没有内部漂移；Control 方向键不在保护清单中。外部应用和 macOS 设置可能随时改变，因此升级系统、Chrome、iTerm2 或安装全局热键工具后必须重新审计。
+
+** Magit Status 常用键
+
+| 按键 | 作用 |
+|---+---+|
+| ~TAB~ | 展开／折叠当前 section |
+| ~RET~ | 访问当前文件、提交或引用 |
+| ~s~ | 暂存当前文件、hunk 或选区 |
+| ~u~ | 取消暂存当前文件、hunk 或选区 |
+| ~c c~ | 创建提交 |
+| ~g~ | 刷新状态 |
+| ~?~ | 打开 Magit 命令总菜单 |
+| ~q~ | 退出并恢复进入 Magit 前的窗口布局 |
+
+提交信息 buffer 使用 ~C-c C-c~ 确认提交，使用 ~C-c C-k~ 取消。push、rebase、reset 和丢弃修改不绑定成一键动作，必须先进入对应菜单确认目标和影响。
+
+Magit 中 ~c~、~P~、~b~ 等键打开的 Transient 子菜单同样使用悬浮卡片；按 ~C-g~ 只关闭当前菜单。终端 Emacs 自动显示原生底部菜单，按键和危险操作确认保持一致。

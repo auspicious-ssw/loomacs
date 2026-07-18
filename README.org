@@ -1,0 +1,96 @@
+* Emacs Config
+
+面向 macOS 的轻量原生 Emacs 配置。当前目标是让配置可解释、可验证、可回滚，并在此基础上逐步增加搜索、代码和 GPT 工作流。仓库说明与设计文档以 Org 为主，直接服务于 Emacs 内阅读、编辑和后续学习工作流。
+
+** 当前基线
+
+- GNU Emacs 30.2 (~emacs-app~)。
+- 配置源码入口： ~config.org~ 是唯一人工维护的主配置； ~config.el~ 是纳入 Git 的 Tangle 产物， ~init.el~ 只在本地离线加载它； ~early-init.el~ 继续负责启动早期行为。
+- 包管理：Emacs 内置 ~package.el~ 与 ~use-package~ 。
+- 主题：已安装 Batppuccin 时使用 ~batppuccin-mocha~ ；缺失时离线回退到内置 ~modus-vivendi-tinted~ 。
+- 首页：Dashboard + Nerd Icons，显示带图标的最近文件、内置 ~project.el~ 项目和书签；插件缺失时安全降级。
+- 底栏：Doom Modeline 按场景显示文件、项目、位置、Git、诊断与 LSP 等有效状态。
+- Git：Magit 按需加载， ~C-x g~ 打开当前仓库状态页；GUI 命令菜单使用 Transient Posframe 居中悬浮，并与内置 ~project.el~ 集成。
+- Org： ~org-modern~ 统一美化标题、列表、表格、标签和源码块； ~org-appear~ 在光标进入时恢复隐藏的强调与链接语法，不改原生 Org 快捷键。
+- 输入法：图形 Emacs 首次启动和新建顶层 GUI frame 时通过 SIS + macism 切到 ABC 英文；child-frame 不触发，之后尊重手动切换，不持续抢占中文输入法。
+- 字体：英文和代码使用 17pt Fira Code，中文回退到 PingFang SC；字体缺失不会阻止启动。
+- 窗口：GUI 默认使用最大化普通窗口，占满可用工作区但保留菜单栏和 Dock。
+- 启动过程不自动刷新包索引或安装第三方包。
+
+** 安装
+
+#+begin_src bash
+git clone https://github.com/auspicious-ssw/emacs-config.git ~/.config/emacs
+#+end_src
+
+目标目录必须不存在；如果机器上已有 =~/.config/emacs=，先备份并确认其中没有仅存于本机的配置，再执行克隆。
+
+仓库已经跟踪由 ~config.org~ 生成的 ~config.el~ ，因此首次启动不需要先安装 Org 插件、执行 Tangle 或联网。日常修改只编辑 ~config.org~ ，不要直接修改生成文件：
+
+#+begin_src bash
+emacs --batch -Q --eval "(progn (require 'org) (require 'ob-tangle) (org-babel-tangle-file \"config.org\" \"config.el\" \"emacs-lisp\"))"
+./scripts/check.sh
+git diff -- config.org config.el
+#+end_src
+
+首次安装声明的第三方包（Batppuccin、Dashboard、Nerd Icons、Doom Modeline、Magit、Org Modern、Org Appear、SIS 与 Transient Posframe）时，在 Emacs 中执行：
+
+#+begin_example
+M-x package-install-selected-packages
+#+end_example
+
+macOS 还需要安装 Nerd Icons 使用的字体：
+
+#+begin_src bash
+brew install --cask font-symbols-only-nerd-font
+#+end_src
+
+SIS 通过独立的 ~macism~ 命令切换 macOS 原生输入源：
+
+#+begin_src bash
+brew install laishulu/homebrew/macism
+#+end_src
+
+包索引刷新会分别访问 GNU ELPA、NonGNU ELPA 和 MELPA，因此代理软件可能显示多条连接。这是三个明确的软件源请求，不是循环重连。
+
+Dashboard 的 Recent Files、Projects 和 Bookmarks 是 Emacs 使用状态，不是下载列表；插件安装在 =~/.config/emacs/elpa/=，不会出现在 =~/Downloads=。
+
+** Git 快速入口
+
+- ~C-x g~ ：打开当前仓库的 Magit Status。
+- ~C-c g~ ：在任意 buffer 打开 Magit 命令总菜单。
+- ~C-c f~ ：打开只针对当前文件的 Git 菜单，例如 blame、log 和 diff。
+- ~C-x p m~ ：打开当前 ~project.el~ 项目的 Magit Status。
+
+Status 页先掌握 ~TAB~ 展开、~s~ 暂存、~u~ 取消暂存、~c c~ 提交、~g~ 刷新和 ~q~ 返回即可。push、rebase、reset 与丢弃修改都保持手动触发；配置不会自动执行这些操作，也不会移除危险操作确认。
+
+在图形 Emacs 中， ~C-c g~、~C-c f~ 以及 Magit 内的 ~c~、~P~ 等 Transient 菜单会显示为窗口中央的 Batppuccin 悬浮卡片；Status、diff、log 仍使用正常编辑窗口。终端 Emacs 或 child-frame 不可用时自动回退到底部菜单。
+
+** 验证
+
+#+begin_src bash
+./scripts/check.sh
+#+end_src
+
+脚本的目标检查包括 ~config.org~ 与 ~config.el~ 的 Tangle 一致性、 ~init.el~ 的离线加载边界、Elisp 结构、Org 文档与本地链接、Org 美化模式、核心快捷键语义、SIS 的 GUI/TTY frame 边界、第三方包缺失时的离线降级、Magit 延迟加载与临时仓库暂存流程、GC 恢复及 XDG 状态目录边界。它不会在验证中真实切换系统输入源或修改外部应用快捷键；实际通过项以当前命令输出为准。
+
+** 数据边界
+
+- Git 管理：人工维护的 ~config.org~ 、可直接启动的 ~config.el~ 生成物、引导文件、文档和验证脚本。
+- 本机依赖： ~elpa/~ ，可通过包清单重新安装。
+- 持久运行状态：=${XDG_STATE_HOME:-~/.local/state}/emacs/=，包括最近文件、项目、书签和 Magit/Transient 菜单历史。
+- 可清理缓存：=${XDG_CACHE_HOME:-~/.cache}/emacs/=。
+- 密钥与令牌：不得写入本仓库；未来 GPT 接入使用系统密钥链或 ~auth-source~ 。
+
+** 回滚
+
+查看变更历史后，使用非破坏性的反向提交回滚：
+
+#+begin_src bash
+git log --oneline
+git revert <commit>
+#+end_src
+
+Literate 配置回滚时，应把 ~config.org~ 与对应的 ~config.el~ 作为同一变更单元一起反向提交。不要直接修补生成文件；如果两者漂移，以 ~config.org~ 为准重新 Tangle，再运行检查。
+
+详细设计、路线和排障说明见 [[file:docs/README.org][docs/]]。

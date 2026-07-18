@@ -1,0 +1,101 @@
+* 配置架构
+
+** 目标
+
+这套配置首先是一套可解释的个人 Emacs 配置，其次才是功能集合。当前重点是把 macOS 上的 Emacs 变成稳定主编辑器，并为后续代码开发和 GPT 接入留出清晰扩展点。
+
+** 当前目录
+
+#+begin_example
+~/.config/emacs/
+├── README.org                 # GitHub 项目入口、安装、验证和回滚
+├── .gitignore                 # 排除本机包、状态、缓存与编译产物
+├── early-init.el              # 启动早期配置：GC、package 启动、基础 UI
+├── init.el                    # 最小引导：只离线加载本地 config.el
+├── config.org                 # 唯一人工维护的 Literate 主配置
+├── config.el                  # config.org 的受控 Tangle 产物，由 Git 跟踪
+├── elpa/                      # 本机第三方包，Git 忽略，可显式重建
+├── scripts/check.sh           # 不联网的配置、Tangle 一致性回归检查
+└── docs/*.org                 # Org 格式的架构、决策、路线与运维文档
+
+${XDG_STATE_HOME:-~/.local/state}/emacs/
+├── custom.el                  # Customize 持久设置
+├── history                    # 命令和 minibuffer 历史
+├── places                     # 文件光标位置
+├── recentf                    # 最近文件列表
+├── projects                   # project.el 已知项目
+├── bookmarks                  # Emacs 书签
+└── transient/                 # Magit 菜单参数、层级和历史
+
+${XDG_CACHE_HOME:-~/.cache}/emacs/
+├── backups/                   # 备份文件
+├── auto-save/                 # autosave 内容
+└── auto-save-list/            # autosave 会话索引
+#+end_example
+
+** 当前加载关系
+
+#+begin_example
+Emacs 启动
+├── early-init.el
+│   ├── 临时提高 GC 阈值
+│   ├── 注册 GC 恢复兜底
+│   ├── 禁用 package-enable-at-startup
+│   ├── 初始 frame 与后续 frame 默认最大化
+│   └── 关闭 menu/tool/scroll bar，减少启动闪烁
+└── init.el
+    └── 离线加载仓库内 config.el
+        ├── 基础编辑体验与 XDG state/cache 边界
+        ├── package.el、use-package、主题、字体和 macOS 修饰键
+        ├── Dashboard、Doom Modeline 与 Org 视觉
+        ├── Magit、Transient Posframe 与 project.el 入口
+        ├── SIS + macism 顶层 GUI frame 输入源策略
+        └── 恢复正常 GC 阈值
+#+end_example
+
+~config.org~ 是上图中 ~config.el~ 的唯一人工维护来源。 ~config.el~ 被纳入 Git，使全新克隆和离线机器无需先运行 Org 或 Tangle 即可启动； ~scripts/check.sh~ 负责阻止两者漂移。生成文件用于执行和审查，不作为第二个人工编辑入口。
+
+** 当前模块边界
+
+当前配置还没有拆分 ~lisp/~ 模块。原因是配置量仍适合由一个按章节组织的 ~config.org~ 解释和生成，暂不为拆分而拆分； ~init.el~ 刻意保持为稳定的最小引导层。
+
+后续配置增长后，建议演进为：
+
+#+begin_example
+~/.config/emacs/
+├── early-init.el
+├── init.el
+├── config.org                 # 继续作为总入口，Tangle 各模块
+├── config.el                  # 或缩减为模块加载清单
+├── lisp/
+│   ├── core-options.el        # 基础选项
+│   ├── core-ui.el             # 主题、字体、frame、modeline
+│   ├── core-keymaps.el        # 全局快捷键
+│   ├── core-packages.el       # package/use-package 基础
+│   ├── core-completion.el     # minibuffer 与补全
+│   ├── core-code.el           # eglot、语言模式和代码体验
+│   ├── core-git.el            # magit 等 Git 能力
+│   └── core-ai.el             # gptel 与 GPT 工作流
+└── docs/
+#+end_example
+
+** 配置与状态文件边界
+
+- =~/.config/emacs/= 是可复现源码边界，由 Git 管理。
+- ~config.org~ 是配置语义与说明的单一事实源； ~config.el~ 是必须与其同步提交的生成物，不直接手改。
+- =~/.local/state/emacs/=（或 ~XDG_STATE_HOME~ ）保存应跨重启保留、但不应共享到 Git 的本机状态。
+- =~/.cache/emacs/=（或 ~XDG_CACHE_HOME~ ）保存可以安全重建的缓存、备份和 autosave。
+- ~elpa/~ 是本机依赖安装目录，不提交；依赖事实由 ~package-selected-packages~ 声明。
+- Magit 只在首次调用时加载；Transient 菜单状态写入 XDG state，不在配置目录生成 ~transient/~ 。
+- ~transient-posframe~ 只接管 Transient 命令菜单：GUI 使用 child-frame，TTY/不可用环境恢复原生 side window；它不接管 Magit Status、diff、log 或其他普通 buffer。
+- ~sis~ 只管理输入源边界，实际 macOS 切换由 Homebrew 安装的 ~macism~ 完成；配置仅在顶层 GUI frame 创建时切到 ABC，忽略 Posframe 等 child-frame，不启用 respect、context、inline、cursor 或轮询模式。
+- ~org-modern~ 只处理 Org 结构的文字属性和排版， ~org-appear~ 只在光标进入时恢复隐藏语法；两者按 Org buffer 加载，不叠加职责重复的 ~org-superstar~ 或 ~org-bullets~ 。
+- ~ssw/sync-transient-posframe~ 与 ~ssw/select-english-input-source~ 是本机策略适配层，不复制插件核心功能。当前体量不足以成为新插件；若继续增长，先拆到仓库内 ~lisp/~ 模块，再根据是否存在可复用公共 API 决定是否独立发布。
+- 根说明与 ~docs/~ 统一使用 Org 格式；仓库不保存等价 Markdown 副本，避免入口、链接和决策形成两份事实源。
+- 密钥不属于任何上述源码文件，未来统一交给系统密钥链或 ~auth-source~ 。
+
+旧版生成在配置根目录的 ~history~、~recentf~、~places~ 和 ~auto-save-list/~ 仅作为迁移前遗留文件被 ~.gitignore~ 排除；新版本不再向这些路径写入。
+
+** 与 Neovim 配置的边界
+
+Neovim 配置位于 =~/.config/nvim/=，Emacs 配置位于 =~/.config/emacs/=。两者当前互不依赖。后续如果 Emacs 成为主编辑器，Neovim 可以保留为备用终端编辑器，不需要立即删除。
