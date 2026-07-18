@@ -20,6 +20,7 @@
 - 删除会反向关闭 Eglot Flymake 的重复 minor-mode Hook；真实 Pyright 项目已返回诊断。
 - 同时更新默认与当前 NS frame fontset，使中文字形真实使用 PingFang SC。
 - 从 Dashboard Recent Files 过滤 Loomacs 当前/旧版 XDG state 与 cache 文件。
+- 同步 Magit 的 MELPA 滚动版本与 commit，保持公开 CI 的包锁门禁有效。
 
 ** Security
 

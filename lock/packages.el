@@ -25,7 +25,7 @@
     (f :version "20241003.1131" :commit "931b6d0667fe03e7bf1c6c282d6d8d7006143c52" :url "https://github.com/rejeep/f.el" :direct nil)
     (gptel :version "20260715.1547" :commit "8701e2bd80c5d2091ce2decef5d34d6fce4a3ada" :url "https://github.com/karthink/gptel" :direct t)
     (llama :version "20260601.1455" :commit "4d4024048053b898a01521046e0f063ee47615b0" :url "https://github.com/tarsius/llama" :direct nil)
-    (magit :version "20260717.1531" :commit "6195f952da0ed4b0a2dfcf58db4352111bba4df9" :url "https://github.com/magit/magit" :direct t)
+    (magit :version "20260718.1210" :commit "5429811150cc487603eaae972c0e4937b16651ac" :url "https://github.com/magit/magit" :direct t)
     (magit-section :version "20260709.950" :commit "cf9d129d3612c7a900a82263951310b186860834" :url "https://github.com/magit/magit" :direct nil)
     (marginalia :version "20260519.1044" :commit "feb66c02bbd88dba867cdd92b94fe24279ed578a" :url "https://github.com/minad/marginalia" :direct t)
     (nerd-icons :version "20260710.1627" :commit "674909974637ff0ec2b5ebf43f9a8aefa35d93e9" :url "https://github.com/rainstormstudio/nerd-icons.el" :direct t)

@@ -37,7 +37,7 @@
 | nerd-icons | 20260710.1627 | UI | Dashboard 与 Modeline 图标 |
 | doom-modeline | 20260708.823 | UI | 场景化状态栏 |
 | sis | 20260711.608 | macOS | 经 macism 切换 ABC 输入源 |
-| magit | 20260717.1531 | Git | Git Status、stage、commit、branch 等完整工作流 |
+| magit | 20260718.1210 | Git | Git Status、stage、commit、branch 等完整工作流 |
 | transient | 20260701.1255 | Git | Magit 与 gptel 的结构化命令菜单 |
 | transient-posframe | 20241212.940 | Git/UI | GUI 中把 Transient 菜单显示为悬浮 child-frame |
 | org-modern | 20260707.1016 | Org | 标题、列表、表格、标签和源码块排版 |
