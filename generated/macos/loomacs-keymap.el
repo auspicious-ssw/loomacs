@@ -3,7 +3,12 @@
 ;; Author: SSW
 ;; Maintainer: SSW <https://github.com/auspicious-ssw>
 
-(when (boundp 'ns-option-modifier)
+(eval-when-compile
+  (defvar ns-option-modifier)
+  (defvar ns-command-modifier))
+
+(when (and (boundp 'ns-option-modifier)
+           (boundp 'ns-command-modifier))
   (setq ns-option-modifier 'meta
         ns-command-modifier 'super))
 

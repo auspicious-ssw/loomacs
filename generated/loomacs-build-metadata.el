@@ -32,7 +32,7 @@
 	  ("modules/macos/input-source.org"
 	   . "055e246fc8f0940668f6a067e163d3e51d2e7d12576e1bdf7580b14dd84cc983")
 	  ("modules/macos/keymap.org"
-	   . "8c927ea21be6e9c68ffa677754dacbf518ea0064c72439c0f3bc5f6ad5fc9fdc")
+	   . "aabb985af3c5381aafb7fada34e136dc63153f5c919104546c13a8c74fb33fb5")
 	  ("modules/navigation/navigation.org"
 	   . "643cf0540d993a03210e4dc5121f7183c337ec9c96336bd219f4662544278f5d")
 	  ("modules/navigation/project.org"
@@ -139,7 +139,7 @@
 	  ("macos/loomacs-input-source.el"
 	   . "06727918fea261da3cafeb4e4869e74f5f249160952134a2206ff48193f309d0")
 	  ("macos/loomacs-keymap.el"
-	   . "f0eb91a9e76b1d480bd674630cec1bb5c4da83202c15513d70f8c9d912c4dff3")
+	   . "d0aeffef0efa6a9e0f61cc90a6c0692abd38d3aad9a7ac0331093b233bd21376")
 	  ("navigation/loomacs-navigation.el"
 	   . "83e0a4da5b308e994b3141cb5a58b5f830faa1772f6ff8965a0c9075a9c22452")
 	  ("navigation/loomacs-project.el"
