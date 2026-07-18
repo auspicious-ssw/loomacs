@@ -7,6 +7,8 @@
 (defvar loomacs-font-family)
 (defvar loomacs-font-height)
 (defvar loomacs-cjk-font-family)
+(declare-function set-fontset-font "fontset"
+                  (fontset characters font-spec &optional frame add))
 
 (defun loomacs-apply-fonts (&optional frame)
   "为 FRAME 应用 Loomacs 代码字体和中文回退字体。"
