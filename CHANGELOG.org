@@ -21,7 +21,7 @@
 - 同时更新默认与当前 NS frame fontset，使中文字形真实使用 PingFang SC。
 - 从 Dashboard Recent Files 过滤 Loomacs 当前/旧版 XDG state 与 cache 文件。
 - 同步 Magit 的 MELPA 滚动版本与 commit，保持公开 CI 的包锁门禁有效。
-- 无 GUI 构建缺少工具栏或滚动条函数时安全降级，不阻断 TTY/CI 启动与编译。
+- 无 GUI 构建缺少工具栏、滚动条或字体集函数时安全降级，不阻断 TTY/CI 启动与编译。
 
 ** Security
 

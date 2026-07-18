@@ -24,6 +24,7 @@
 (defvar transient-posframe-mode)
 
 (declare-function corfu-quit "corfu" ())
+(declare-function fontset-font "fontset" (name ch &optional all))
 (declare-function magit-dispatch "magit" ())
 (declare-function posframe-workable-p "posframe" ())
 (declare-function transient-quit-one "transient" ())
