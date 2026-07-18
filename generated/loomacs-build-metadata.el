@@ -18,7 +18,7 @@
 	  ("modules/core/state.org"
 	   . "cfddd0e5b850d51b4bcd335004c7c89bf5b4f4f9476ce278c273968e3290e4e1")
 	  ("modules/core/packages.org"
-	   . "ca832b010493d74e68f9d95d0d8db59281def247dc8c56bd1f78416f392b52b1")
+	   . "5c3a8c9b46979eec28bf40f72fb5de431fbf97cbda72d0f9c8d12360b3814322")
 	  ("modules/core/editing.org"
 	   . "10230affb62f90d9fb57ccd6953d83328ae5607b4256bd18dd6ef2690db9f58a")
 	  ("modules/macos/macos.org"
@@ -125,7 +125,7 @@
 	  ("core/loomacs-state.el"
 	   . "b4dab8ca99899771c5a3f903b5f041e64f6aec1780fc300fec8330762a5d5320")
 	  ("core/loomacs-packages.el"
-	   . "7331d45b57a68ad926f59937d16dace43427e0060db6794cabbc45d95a0ae9a5")
+	   . "b88681a54165a8c1daeef53a41f0d7af5670261bbda1590dafd490d61e845c80")
 	  ("core/loomacs-editing.el"
 	   . "25bfb16c928ee714f39393c492e8a3f67eb72dc7939a8de248407732172e002d")
 	  ("macos/loomacs-macos.el"

@@ -26,6 +26,9 @@
 
 (require 'package)
 
+;; 变量由 Magit 定义，但必须在插件尚未加载时先关闭其隐式全局键位。
+(defvar magit-define-global-key-bindings)
+
 (setq package-archives
       '(("gnu" . "https://elpa.gnu.org/packages/")
         ("nongnu" . "https://elpa.nongnu.org/nongnu/")
