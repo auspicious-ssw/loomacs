@@ -30,7 +30,7 @@
 	  ("modules/macos/font.org"
 	   . "3d07ef1de641f150d36476c16a1c51de0a8f210c9f6d08266e3fe7eef25a72b8")
 	  ("modules/macos/input-source.org"
-	   . "d8853550ac84547800171a8447b5d652a0b86b50317d6d2267bce5733ff12a9a")
+	   . "055e246fc8f0940668f6a067e163d3e51d2e7d12576e1bdf7580b14dd84cc983")
 	  ("modules/macos/keymap.org"
 	   . "8c927ea21be6e9c68ffa677754dacbf518ea0064c72439c0f3bc5f6ad5fc9fdc")
 	  ("modules/navigation/navigation.org"
@@ -137,7 +137,7 @@
 	  ("macos/loomacs-font.el"
 	   . "2a39792daf3346ef93ca9e1094add7edd3597b7ca16d143e30f3cedb028db362")
 	  ("macos/loomacs-input-source.el"
-	   . "1ac14a6f177886a5a4800a4468e02dbc23cc51b59d967d212fc8ccfa1fb91e3f")
+	   . "06727918fea261da3cafeb4e4869e74f5f249160952134a2206ff48193f309d0")
 	  ("macos/loomacs-keymap.el"
 	   . "f0eb91a9e76b1d480bd674630cec1bb5c4da83202c15513d70f8c9d912c4dff3")
 	  ("navigation/loomacs-navigation.el"

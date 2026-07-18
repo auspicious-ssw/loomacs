@@ -27,6 +27,11 @@
 
 (eval-when-compile (require 'use-package))
 
+(defvar sis-external-ism)
+(declare-function sis-set-english "sis" ())
+(declare-function sis-ism-lazyman-config "sis"
+                  (english-source other-source &optional ism-type))
+
 (defconst loomacs-macism-executable
   (when (fboundp 'loomacs-macos-find-executable)
     (loomacs-macos-find-executable "macism"))
