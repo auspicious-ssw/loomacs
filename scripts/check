@@ -27,7 +27,8 @@ fi
 
 printf '%s\n' '[2/8] Org 结构、Lint 与本地链接'
 "$EMACS" --batch -Q \
-  --eval '(setq user-emacs-directory (file-name-as-directory (getenv "LOOMACS_ROOT")))' \
+  --eval '(setq user-emacs-directory (file-name-as-directory (getenv "LOOMACS_ROOT"))
+                package-user-dir (expand-file-name "elpa" user-emacs-directory))' \
   --eval '(progn
             (require (quote org))
             (require (quote org-lint))
@@ -67,7 +68,8 @@ printf '%s\n' '[3/8] Manifest、生成物、依赖锁与本机要求'
 
 printf '%s\n' '[4/8] 框架 ERT'
 "$EMACS" --batch -Q \
-  --eval '(setq user-emacs-directory (file-name-as-directory (getenv "LOOMACS_ROOT")))' \
+  --eval '(setq user-emacs-directory (file-name-as-directory (getenv "LOOMACS_ROOT"))
+                package-user-dir (expand-file-name "elpa" user-emacs-directory))' \
   -L "$ROOT/framework" -L "$ROOT/test" \
   -l ert \
   -l loomacs-module-test \
@@ -82,7 +84,8 @@ printf '%s\n' '[4/8] 框架 ERT'
 printf '%s\n' '[5/8] Framework、测试、入口与生成模块严格编译'
 LOOMACS_COMPILE_DIR="$TMP_ROOT/compile" \
 "$EMACS" --batch -Q \
-  --eval '(setq user-emacs-directory (file-name-as-directory (getenv "LOOMACS_ROOT")))' \
+  --eval '(setq user-emacs-directory (file-name-as-directory (getenv "LOOMACS_ROOT"))
+                package-user-dir (expand-file-name "elpa" user-emacs-directory))' \
   -L "$ROOT/framework" \
   --eval '(progn
             (require (quote package))
@@ -135,7 +138,8 @@ printf '%s\n' '[6/8] 已安装依赖的离线启动与快捷键语义'
 XDG_STATE_HOME="$TMP_ROOT/installed-state" \
 XDG_CACHE_HOME="$TMP_ROOT/installed-cache" \
 "$EMACS" --batch -Q \
-  --eval '(setq user-emacs-directory (file-name-as-directory (getenv "LOOMACS_ROOT")))' \
+  --eval '(setq user-emacs-directory (file-name-as-directory (getenv "LOOMACS_ROOT"))
+                package-user-dir (expand-file-name "elpa" user-emacs-directory))' \
   --load "$ROOT/early-init.el" \
   --load "$ROOT/init.el" \
   --eval '(progn
