@@ -3,6 +3,9 @@
 ;; Author: SSW
 ;; Maintainer: SSW <https://github.com/auspicious-ssw>
 
+(declare-function tool-bar-mode "tool-bar" (&optional arg))
+(declare-function scroll-bar-mode "scroll-bar" (&optional arg))
+
 (defconst loomacs-gc-cons-threshold-normal (* 16 1024 1024)
   "Emacs 进入交互阶段后的 GC 内存阈值。")
 
@@ -30,8 +33,12 @@
 
 ;; 在 frame 显示前关闭不使用的元素，减少启动闪烁。
 (menu-bar-mode -1)
-(tool-bar-mode -1)
-(scroll-bar-mode -1)
+;; 无 GUI 的 Homebrew/CI 构建可能没有工具栏或滚动条函数；这些只是外观能力，
+;; 缺失时跳过，不能阻断基础 Emacs 启动。
+(when (fboundp 'tool-bar-mode)
+  (tool-bar-mode -1))
+(when (fboundp 'scroll-bar-mode)
+  (scroll-bar-mode -1))
 
 (provide 'early-init)
 ;;; early-init.el ends here
